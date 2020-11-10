@@ -8,7 +8,6 @@
 #include "nrf_mesh_assert.h"
 #include "nrf_mesh_utils.h"
 #include "nordic_common.h"
-#include "generic_level_messages.h"
 
 #include "log.h"
 
@@ -24,9 +23,9 @@ static uint32_t status_send(ems_pwm_server_t * p_server,
   }
 
   access_message_tx_t reply = {
-    .opcode = ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_STATUS),
+    .opcode = ACCESS_OPCODE_SIG(EMS_PWM_OPCODE_STATUS),
     .p_buffer = (const uint8_t *) &msg_pkt,
-    .length = p_params->remaining_time_ms > 0 ? GENERIC_LEVEL_STATUS_MAXLEN : GENERIC_LEVEL_STATUS_MINLEN,
+    .length = p_params->remaining_time_ms > 0 ? EMS_PWM_STATUS_MAXLEN : EMS_PWM_STATUS_MINLEN,
     .force_segmented = p_server->settings.force_segmented,
     .transmic_size = p_server->settings.transmic_size
   };
@@ -53,12 +52,12 @@ static void handle_set(access_model_handle_t model_handle, const access_message_
   model_transition_t in_data_tr = {0};
   ems_pwm_status_params_t out_data = {0};
 
-  if(p_rx_msg->length == GENERIC_LEVEL_SET_MINLEN || p_rx_msg->length == GENERIC_LEVEL_SET_MAXLEN){
+  if(p_rx_msg->length == EMS_PWM_SET_MINLEN || p_rx_msg->length == EMS_PWM_SET_MAXLEN){
     ems_pwm_set_msg_pkt_t * p_msg_params_packed = (ems_pwm_set_msg_pkt_t *) p_rx_msg->p_data;
     in_data.pwm_duty = p_msg_params_packed->pwm_duty;
     in_data.tid = p_msg_params_packed->tid;
-    if(model_tid_validate(&p_server->tid_tracker, &p_rx_msg->meta_data, GENERIC_LEVEL_OPCODE_SET, in_data.tid)){
-      if(p_rx_msg->length == GENERIC_LEVEL_SET_MAXLEN){
+    if(model_tid_validate(&p_server->tid_tracker, &p_rx_msg->meta_data, EMS_PWM_OPCODE_SET, in_data.tid)){
+      if(p_rx_msg->length == EMS_PWM_SET_MAXLEN){
         if(!model_transition_time_is_valid(p_msg_params_packed->transition_time)){
           return;
         }
@@ -69,82 +68,14 @@ static void handle_set(access_model_handle_t model_handle, const access_message_
       }
       p_server->settings.p_callbacks->ems_pwm_cbs.set_cb(p_server,
                                                      &p_rx_msg->meta_data, &in_data,
-                                                     (p_rx_msg->length == GENERIC_LEVEL_SET_MINLEN) ? NULL : &in_data_tr,
-                                                     (p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_SET) ? &out_data : NULL);
-      if(p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_SET){
+                                                     (p_rx_msg->length == EMS_PWM_SET_MINLEN) ? NULL : &in_data_tr,
+                                                     (p_rx_msg->opcode.opcode == EMS_PWM_OPCODE_SET) ? &out_data : NULL);
+      if(p_rx_msg->opcode.opcode == EMS_PWM_OPCODE_SET){
         (void) status_send(p_server, p_rx_msg, &out_data);
       }
     }
   }
 }
-
-/*static void handle_delta_set(access_model_handle_t model_handle, const access_message_rx_t * p_rx_msg, void * p_args){
-  ems_pwm_server_t * p_server = (ems_pwm_server_t *) p_args;
-  ems_pwm_delta_set_params_t in_data = {0};
-  model_transition_t in_data_tr = {0};
-  ems_pwm_status_params_t out_data = {0};
-
-  if(p_rx_msg->length == GENERIC_LEVEL_DELTA_SET_MINLEN || p_rx_msg->length == GENERIC_LEVEL_DELTA_SET_MAXLEN){
-    ems_pwm_delta_set_msg_pkt_t * p_msg_params_packed = (ems_pwm_delta_set_msg_pkt_t *) p_rx_msg->p_data;
-    in_data.delta_pwm_duty = p_msg_params_packed->delta_pwm_duty;
-    in_data.tid = p_msg_params_packed->tid;
-
-    (void) model_tid_validate(&p_server->tid_tracker, &p_rx_msg->meta_data, GENERIC_LEVEL_OPCODE_DELTA_SET, in_data.tid);
-    if(p_rx_msg->length == GENERIC_LEVEL_DELTA_SET_MAXLEN){
-      if(!model_transition_time_is_valid(p_msg_params_packed->transition_time)){
-        return;
-      }
-
-      in_data_tr.transition_time_ms = model_transition_time_decode(p_msg_params_packed->transition_time);
-      in_data_tr.delay_ms = model_delay_decode(p_msg_params_packed->delay);
-    }
-
-    p_server->settings.p_callbacks->ems_pwm_cbs.delta_set_cb(p_server,
-                                                          &p_rx_msg->meta_data,
-                                                          &in_data,
-                                                          (p_rx_msg->length == GENERIC_LEVEL_DELTA_SET_MINLEN) ? NULL : &in_data_tr,
-                                                          (p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_DELTA_SET) ? &out_data : NULL); 
-  
-    if(p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_DELTA_SET){
-      (void) status_send(p_server, p_rx_msg, &out_data);
-    }
-  }
-}*/
-
-/*static void handle_move_set(access_model_handle_t model_handle, const access_message_rx_t * p_rx_msg, void * p_args)
-{
-  ems_pwm_server_t * p_server = (ems_pwm_server_t *) p_args;
-  ems_pwm_move_set_params_t in_data = {0};
-  model_transition_t in_data_tr = {0};
-  ems_pwm_status_params_t out_data = {0};
-
-  if (p_rx_msg->length == GENERIC_LEVEL_MOVE_SET_MINLEN || p_rx_msg->length == GENERIC_LEVEL_MOVE_SET_MAXLEN)
-  {
-    ems_pwm_move_set_msg_pkt_t * p_msg_params_packed = (ems_pwm_move_set_msg_pkt_t *) p_rx_msg->p_data;
-    in_data.move_pwm_duty = p_msg_params_packed->move_pwm_duty;
-    in_data.tid = p_msg_params_packed->tid;
-
-    if (model_tid_validate(&p_server->tid_tracker, &p_rx_msg->meta_data, GENERIC_LEVEL_OPCODE_MOVE_SET, in_data.tid)){
-      if (p_rx_msg->length == GENERIC_LEVEL_MOVE_SET_MAXLEN){
-        if (!model_transition_time_is_valid(p_msg_params_packed->transition_time)){
-          return;
-        }
-
-        in_data_tr.transition_time_ms = model_transition_time_decode(p_msg_params_packed->transition_time);
-         in_data_tr.delay_ms = model_delay_decode(p_msg_params_packed->delay);
-      }
-
-      p_server->settings.p_callbacks->ems_pwm_cbs.move_set_cb(p_server,
-                                                            &p_rx_msg->meta_data, &in_data,
-                                                            (p_rx_msg->length == GENERIC_LEVEL_MOVE_SET_MINLEN) ? NULL : &in_data_tr,
-                                                            (p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_MOVE_SET) ? &out_data : NULL);
-
-      if (p_rx_msg->opcode.opcode == GENERIC_LEVEL_OPCODE_MOVE_SET){
-        (void) status_send(p_server, p_rx_msg, &out_data);
-      }
-    }
-  }
-}*/
 
 static void handle_get(access_model_handle_t model_handle, const access_message_rx_t * p_rx_msg, void * p_args){
   ems_pwm_server_t * p_server = (ems_pwm_server_t *) p_args;
@@ -157,13 +88,9 @@ static void handle_get(access_model_handle_t model_handle, const access_message_
 }
 
 static const access_opcode_handler_t m_opcode_handlers[] = {
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_GET), handle_get},
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_SET), handle_set},
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_SET_UNACKNOWLEDGED), handle_set},
-/*    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_DELTA_SET), handle_delta_set},
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_DELTA_SET_UNACKNOWLEDGED), handle_delta_set},
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_MOVE_SET), handle_move_set},
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_MOVE_SET_UNACKNOWLEDGED), handle_move_set}*/
+    {ACCESS_OPCODE_SIG(EMS_PWM_OPCODE_GET), handle_get},
+    {ACCESS_OPCODE_SIG(EMS_PWM_OPCODE_SET), handle_set},
+    {ACCESS_OPCODE_SIG(EMS_PWM_OPCODE_SET_UNACKNOWLEDGED), handle_set},
 };
 
 uint32_t ems_pwm_server_init(ems_pwm_server_t * p_server, uint8_t element_index){
@@ -175,7 +102,7 @@ uint32_t ems_pwm_server_init(ems_pwm_server_t * p_server, uint8_t element_index)
    }
 
    access_model_add_params_t init_params = {
-     .model_id = ACCESS_MODEL_SIG(GENERIC_LEVEL_SERVER_MODEL_ID),
+     .model_id = ACCESS_MODEL_SIG(EMS_PWM_SERVER_MODEL_ID),
      .element_index = element_index,
      .p_opcode_handlers = m_opcode_handlers,
      .opcode_count = ARRAY_SIZE(m_opcode_handlers),

@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "nrf_assert.h"
-#include "nrf_ppi.h"
+#include "nrf_drv_pwm.h"
 #include "log.h"
 
 #define PWM_NOPIN         0xFFFFFFFF
@@ -49,13 +49,13 @@ typedef struct
     uint32_t        pulse_count;
 }waveform_pwm_config_t;
 
-static NRF_PWM_Type* nrf_pwm_base(uint32_t pwm_number);
+static NRF_PWM_Type* nrf_pwm_base(const uint32_t pwm_number);
 
-bool waveform_pwm_init(uint32_t pwm_number, const waveform_pwm_config_t * const p_config);
+bool waveform_pwm_init(const uint32_t pwm_number, const waveform_pwm_config_t * const p_config);
 
-bool waveform_pulse_count_change(uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count);
+bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count);
 
-bool waveform_pulse_period_change(uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us);
+bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us);
 
 typedef struct
 {
@@ -63,13 +63,12 @@ typedef struct
     uint32_t    voltage;
 }voltage_pwm_config_t;
 
-bool voltage_pwm_init(uint32_t pwm_number, const voltage_pwm_config_t * const p_config);
+bool voltage_pwm_init(const uint32_t pwm_number, const voltage_pwm_config_t * const p_config);
 
 bool change_voltage(int16_t duty);
 
+bool pwm_start(const uint32_t pwm_number);
 
-bool pwm_start(uint32_t pwm_number);
-
-bool pwm_stop(uint32_t pwm_number);
+bool pwm_stop(const uint32_t pwm_number);
 
 #endif

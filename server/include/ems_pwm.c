@@ -1,6 +1,6 @@
 #include "ems_pwm.h"
 
-static NRF_PWM_Type* nrf_pwm_base(uint32_t pwm_number)
+static NRF_PWM_Type* nrf_pwm_base(const uint32_t pwm_number)
 {
     switch(pwm_number)
     {
@@ -19,7 +19,7 @@ static NRF_PWM_Type* nrf_pwm_base(uint32_t pwm_number)
 static uint16_t pwm_seq0[3][4];
 static uint16_t pwm_seq1[3][2][4];
 
-bool waveform_pwm_init(uint32_t pwm_number, waveform_pwm_config_t const * const p_config)
+bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * const p_config)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || (p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) == true)
@@ -76,7 +76,7 @@ bool waveform_pwm_init(uint32_t pwm_number, waveform_pwm_config_t const * const 
     return true;
 }
 
-bool waveform_pulse_count_change(uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count)
+bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
@@ -108,7 +108,7 @@ bool waveform_pulse_count_change(uint32_t pwm_number, waveform_pwm_config_t * co
     return true;
 }
 
-bool waveform_pulse_period_change(uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us)
+bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
@@ -135,7 +135,7 @@ bool waveform_pulse_period_change(uint32_t pwm_number, waveform_pwm_config_t * c
 
 static uint16_t voltage_seq[1];
 
-bool voltage_pwm_init(uint32_t pwm_number, const voltage_pwm_config_t * const p_config)
+bool voltage_pwm_init(const uint32_t pwm_number, const voltage_pwm_config_t * const p_config)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || (p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
@@ -176,7 +176,7 @@ bool change_voltage(int16_t duty)
     pwm_start(VOLTAGE_PWM_NUMBER);
 }
 
-bool pwm_start(uint32_t pwm_number)
+bool pwm_start(const uint32_t pwm_number)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
@@ -188,7 +188,7 @@ bool pwm_start(uint32_t pwm_number)
     return true;
 }
 
-bool pwm_stop(uint32_t pwm_number)
+bool pwm_stop(const uint32_t pwm_number)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if(p_nrf_pwm == NULL || !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))

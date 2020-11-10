@@ -17,7 +17,6 @@ typedef void (*ems_pwm_state_status_cb_t)(const ems_pwm_client_t * p_self,
 
 typedef struct{
   ems_pwm_state_status_cb_t ems_pwm_status_cb;
-
   access_reliable_cb_t ack_transaction_status_cb;
   access_publish_timeout_cb_t periodic_publish_cb;
 }ems_pwm_client_callbacks_t;

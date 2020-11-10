@@ -6,10 +6,8 @@
 #include "model_common.h"
 #include "ems_common.h"
 #include "ems_messages.h"
-#include "generic_level_server.h"
 
-#define EMS_PWM_COMPANY_ID 0xFFFF
-#define EMS_PWM_MAX (100)
+#define EMS_PWM_SERVER_MODEL_ID 0x1002
 
 typedef struct __ems_pwm_server_t ems_pwm_server_t;
 
@@ -23,23 +21,9 @@ typedef void (*ems_pwm_state_get_cb_t)(const ems_pwm_server_t * p_self,
                                    const access_message_rx_meta_t * p_meta,
                                    ems_pwm_status_params_t * p_out);
 
-/*typedef void (*ems_pwm_state_delta_set_cb_t)(const ems_pwm_server_t * p_self,
-                                              const access_message_rx_meta_t * p_meta,
-                                              const ems_pwm_delta_set_params_t * p_in,
-                                              const model_transition_t * p_in_transition,
-                                              ems_pwm_status_params_t * p_out);
-
-typedef void (*ems_pwm_state_move_set_cb_t)(const ems_pwm_server_t * p_self,
-                                                  const access_message_rx_meta_t * p_meta,
-                                                  const ems_pwm_move_set_params_t * p_in,
-                                                  const model_transition_t * p_in_transition,
-                                                  ems_pwm_status_params_t * p_out);*/
-
 typedef struct{
   ems_pwm_state_set_cb_t set_cb;
   ems_pwm_state_get_cb_t get_cb;
-/*  ems_pwm_state_delta_set_cb_t delta_set_cb;
-  ems_pwm_state_move_set_cb_t move_set_cb;*/
 }ems_pwm_server_state_cbs_t;
 
 typedef struct{

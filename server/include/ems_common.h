@@ -2,13 +2,8 @@
 #define EMS_COMMON_H__
 
 #include <stdint.h>
-#include "generic_level_common.h"
 
-typedef enum{
-  EMS_PWM_RANGE_STATUS_SUCCESS,
-  EMS_PWM_RANGE_STATUS_CANNOT_SET_RANGE_MIN,
-  EMS_PWM_RANGE_STATUS_CANNOT_SET_RANGE_MAX
-}ems_pwm_range_status_t;
+#define EMS_PWM_COMPANY_ID 0xFFFF
 
 typedef struct{
   int16_t pwm_duty;

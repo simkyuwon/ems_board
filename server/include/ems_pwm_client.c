@@ -15,10 +15,10 @@ static void status_handle(access_model_handle_t handle,
   ems_pwm_client_t * p_client = (ems_pwm_client_t *)p_args;
   ems_pwm_status_params_t in_data = {0};
 
-  if(p_rx_msg->length == GENERIC_LEVEL_STATUS_MINLEN ||
-     p_rx_msg->length == GENERIC_LEVEL_STATUS_MAXLEN){
+  if(p_rx_msg->length == EMS_PWM_STATUS_MINLEN ||
+     p_rx_msg->length == EMS_PWM_STATUS_MAXLEN){
     ems_pwm_status_msg_pkt_t * p_msg_params_packed = (ems_pwm_status_msg_pkt_t *) p_rx_msg->p_data;
-    if(p_rx_msg->length == GENERIC_LEVEL_STATUS_MINLEN){
+    if(p_rx_msg->length == EMS_PWM_STATUS_MINLEN){
       in_data.present_pwm_duty = p_msg_params_packed->present_pwm_duty;
       in_data.target_pwm_duty = p_msg_params_packed->present_pwm_duty;
       in_data.remaining_time_ms = 0;
@@ -35,7 +35,7 @@ static void status_handle(access_model_handle_t handle,
 }
 
 static const access_opcode_handler_t m_opcode_handlers[] = {
-    {ACCESS_OPCODE_SIG(GENERIC_LEVEL_OPCODE_STATUS), status_handle},
+    {ACCESS_OPCODE_SIG(EMS_PWM_OPCODE_STATUS), status_handle},
 };
 
 static uint8_t message_set_packet_create(ems_pwm_set_msg_pkt_t * p_set,
@@ -47,10 +47,10 @@ static uint8_t message_set_packet_create(ems_pwm_set_msg_pkt_t * p_set,
   if(p_transition != NULL){
     p_set->transition_time = model_transition_time_encode(p_transition->transition_time_ms);
     p_set->delay = model_delay_encode(p_transition->delay_ms);
-    return GENERIC_LEVEL_SET_MAXLEN;
+    return EMS_PWM_SET_MAXLEN;
   }
   else{
-    return GENERIC_LEVEL_SET_MINLEN;
+    return EMS_PWM_SET_MINLEN;
   }
 }
 
@@ -129,10 +129,10 @@ uint32_t ems_pwm_client_set(ems_pwm_client_t * p_client,
 
   if(access_reliable_model_is_free(p_client->model_handle)){
     uint8_t server_msg_length = message_set_packet_create(&p_client->msg_pkt.set, p_params, p_transition);
-    message_create(p_client, GENERIC_LEVEL_OPCODE_SET,
+    message_create(p_client, EMS_PWM_OPCODE_SET,
                    (const uint8_t *) &p_client->msg_pkt.set,
                    server_msg_length, &p_client->access_message.message);
-    reliable_context_create(p_client, GENERIC_LEVEL_OPCODE_STATUS, &p_client->access_message);
+    reliable_context_create(p_client, EMS_PWM_OPCODE_STATUS, &p_client->access_message);
     return access_model_reliable_publish(&p_client->access_message);
   }
   else{
@@ -155,7 +155,7 @@ uint32_t ems_pwm_client_set_unack(ems_pwm_client_t * p_client,
   ems_pwm_set_msg_pkt_t msg;
   uint8_t server_msg_length = message_set_packet_create(&msg, p_params, p_transition);
 
-  message_create(p_client, GENERIC_LEVEL_OPCODE_SET_UNACKNOWLEDGED,
+  message_create(p_client, EMS_PWM_OPCODE_SET_UNACKNOWLEDGED,
                 (const uint8_t *) &msg, server_msg_length,
                 &p_client->access_message.message);
   uint32_t status = NRF_SUCCESS;
@@ -172,9 +172,9 @@ uint32_t ems_pwm_client_get(ems_pwm_client_t * p_client){
   }
 
   if(access_reliable_model_is_free(p_client->model_handle)){
-    message_create(p_client, GENERIC_LEVEL_OPCODE_GET, NULL, 0,
+    message_create(p_client, EMS_PWM_OPCODE_GET, NULL, 0,
                    &p_client->access_message.message);
-    reliable_context_create(p_client, GENERIC_LEVEL_OPCODE_STATUS,
+    reliable_context_create(p_client, EMS_PWM_OPCODE_STATUS,
                             &p_client->access_message);
     return access_model_reliable_publish(&p_client->access_message);
   }
