@@ -1,10 +1,13 @@
-#ifndef EMS_SAADC_H_
-#define EMS_SAADC_H_
+#ifndef EMS_SAADC_H__
+#define EMS_SAADC_H__
 
 #include <stdbool.h>
 
 #include "nrf_drv_saadc.h"
 #include "log.h"
+
+#define SAADC_CHANNEL_COUNT (3)
+#define SAMPLES_IN_BUFFER (1)
 
 #define VOLTAGE_SAADC_CHANNEL (0)
 #define TEMPERATURE_SAADC_CHANNEL (1)
@@ -30,7 +33,7 @@
     }                                                                                                                   \
     
 #define MIN_TEMPERATURE 0
-#define MAX_TEMPERATURE 100
+#define MAX_TEMPERATURE 150
 
 typedef struct
 {

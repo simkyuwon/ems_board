@@ -1,3 +1,6 @@
+#ifndef EMS_CLIENT_H__
+#define EMS_CLIENT_H__
+
 #include <stdint.h>
 #include "access.h"
 #include "access_reliable.h"
@@ -50,3 +53,5 @@ uint32_t ems_pwm_client_set_unack(ems_pwm_client_t * p_client,
                                   const model_transition_t * p_transition, uint8_t repeats);
 
 uint32_t ems_pwm_client_get(ems_pwm_client_t * p_client);
+
+#endif

@@ -1,8 +1,10 @@
 #include "ems_button.h"
 
+static uint16_t gpiote_count = 0;
+
 bool button_event_init(nrfx_gpiote_pin_t pin_number)
 {
-    if(pin_number >= P0_PIN_NUM)
+    if(pin_number >= P0_PIN_NUM || gpiote_count >= GPIOTE_CH_NUM)
     {
         return false;
     }
@@ -11,11 +13,12 @@ bool button_event_init(nrfx_gpiote_pin_t pin_number)
                                   (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos) |
                                   (GPIO_PIN_CNF_PULL_Pullup << GPIO_PIN_CNF_PULL_Pos);
 
-    NRF_GPIOTE->CONFIG[0] = (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos) |
-                            (pin_number << GPIOTE_CONFIG_PSEL_Pos) |
-                            (GPIOTE_CONFIG_POLARITY_HiToLo << GPIOTE_CONFIG_POLARITY_Pos);
+    NRF_GPIOTE->CONFIG[gpiote_count] = (GPIOTE_CONFIG_MODE_Event << GPIOTE_CONFIG_MODE_Pos) |
+                                         (pin_number << GPIOTE_CONFIG_PSEL_Pos) |
+                                         (GPIOTE_CONFIG_POLARITY_HiToLo << GPIOTE_CONFIG_POLARITY_Pos);
 
-    NRF_GPIOTE->INTENSET = (GPIOTE_INTENSET_IN0_Enabled << GPIOTE_INTENSET_IN0_Pos);
+    NRF_GPIOTE->INTENSET = (GPIOTE_INTENSET_IN0_Enabled << gpiote_count);
+    gpiote_count++;
 
     NVIC_ClearPendingIRQ(GPIOTE_IRQn);
     NVIC_EnableIRQ(GPIOTE_IRQn);
@@ -23,6 +26,12 @@ bool button_event_init(nrfx_gpiote_pin_t pin_number)
 
 void GPIOTE_IRQHandler()
 {
-    NRF_GPIOTE->EVENTS_IN[0] = 0;
-    printf("GPIOTE_Handler\n");
+    for(uint16_t ch_num = 0; ch_num < GPIOTE_CH_NUM; ch_num++)
+    {
+        if(NRF_GPIOTE->EVENTS_IN[ch_num])
+        {
+            NRF_GPIOTE->EVENTS_IN[ch_num] = 0;
+            printf("GPIOTE%d_Handler\n", ch_num);
+        }
+    }
 }

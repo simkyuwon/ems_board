@@ -1,5 +1,5 @@
-#ifndef EMS_PWM_H_
-#define EMS_PWM_H_
+#ifndef EMS_PWM_H__
+#define EMS_PWM_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -9,9 +9,9 @@
 #include "nrf_drv_pwm.h"
 #include "log.h"
 
-#define PWM_NOPIN         0xFFFFFFFF
+#define PWM_NOPIN         (0xFFFFFFFF)
 
-#define WAVEFORM_PWM_CHANNELS_PER_INSTANCE 2
+#define WAVEFORM_PWM_CHANNELS_PER_INSTANCE (2)
 
 #define WAVEFORM_PWM_CONFIG(period_in_us, width_in_us, count_in, pin0, pin1) \
     {                                                                        \
@@ -32,8 +32,8 @@
 #define WAVEFORM1_PWM_NUMBER  (1)
 #define VOLTAGE_PWM_NUMBER    (2)
 
-#define PWM_POLARITY_Msk 0x8000UL
-#define PWM_COMPARE_Msk 0x7FFFUL
+#define PWM_POLARITY_Msk (0x8000UL)
+#define PWM_COMPARE_Msk (0x7FFFUL)
 
 typedef enum
 {

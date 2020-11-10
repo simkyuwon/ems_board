@@ -11,8 +11,14 @@ const double pt100_resistance_table[] = {
 127.08, 127.46, 127.84, 128.22, 128.61, 128.99, 129.37, 129.75, 130.13, 130.52,
 130.90, 131.28, 131.66, 132.04, 132.42, 132.80, 133.18, 133.57, 133.95, 134.33,
 134.71, 135.09, 135.47, 135.85, 136.23, 136.61, 136.99, 137.37, 137.75, 138.13,
-138.51
+138.51, 138.88, 139.26, 139.64, 140.02, 140.40, 140.78, 141.16, 141.54, 141.91,
+142.29, 142.67, 143.05, 143.43, 143.80, 144.18, 144.56, 144.94, 145.31, 145.69,
+146.07, 146.44, 146.82, 147.20, 147.57, 147.95, 148.33, 148.70, 149.08, 149.46,
+149.83, 150.21, 150.58, 150.96, 151.33, 151.71, 152.08, 152.46, 152.83, 153.21,
+153.58, 153.96, 154.33, 154.71, 155.08, 155.46, 155.83, 156.20, 156.58, 156.95,
+157.33
 };
+
 
 static volatile SAADC_CH_Type* nrf_saadc_base(const uint32_t saadc_ch_number)
 {
@@ -86,36 +92,13 @@ bool temperature_saadc_init(const uint32_t saadc_ch_number,
         return false;
     }
 
-    p_nrf_ref_saadc_ch->PSELP = (NRF_SAADC_INPUT_VDD << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_ref_saadc_ch->CONFIG = (NRF_SAADC_RESISTOR_DISABLED << SAADC_CH_CONFIG_RESP_Pos) |
-                                 (NRF_SAADC_GAIN1_6 << SAADC_CH_CONFIG_GAIN_Pos) |
-                                 (NRF_SAADC_REFERENCE_INTERNAL << SAADC_CH_CONFIG_REFSEL_Pos) |
-                                 (NRF_SAADC_ACQTIME_3US << SAADC_CH_CONFIG_TACQ_Pos) |
-                                 (SAADC_CH_CONFIG_MODE_SE << SAADC_CH_CONFIG_MODE_Pos) |
-                                 (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
-/*
-    p_nrf_th_saadc_ch->PSELP = (p_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_th_saadc_ch->CONFIG = (p_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
-                                (p_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
-                                (p_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
-                                (p_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
-                                (SAADC_CH_CONFIG_MODE_SE << SAADC_CH_CONFIG_MODE_Pos) |
-                                (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
-
-    volatile SAADC_CH_Type* p_nrf_ref_saadc_ch = nrf_saadc_base(saadc_ch_number + 1);
-   
-    if(p_nrf_ref_saadc_ch == NULL)
-    {
-        return false;
-    }
-
-    p_nrf_ref_saadc_ch->PSELP = (p_config->pin_n << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_ref_saadc_ch->CONFIG = (p_config->resistor_n << SAADC_CH_CONFIG_RESP_Pos) |
-                                 (p_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
-                                 (p_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
+    p_nrf_ref_saadc_ch->PSELP = (NRF_SAADC_INPUT_AIN3 << SAADC_CH_PSELP_PSELP_Pos);
+    p_nrf_ref_saadc_ch->CONFIG = (p_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
+                                 (SAADC_CH_CONFIG_GAIN_Gain1 << SAADC_CH_CONFIG_GAIN_Pos) |
+                                 (SAADC_CH_CONFIG_REFSEL_Internal << SAADC_CH_CONFIG_REFSEL_Pos) |
                                  (p_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
                                  (SAADC_CH_CONFIG_MODE_SE << SAADC_CH_CONFIG_MODE_Pos) |
-                                 (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);*/
+                                 (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
     return true;
 }
 
