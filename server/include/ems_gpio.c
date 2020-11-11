@@ -18,7 +18,9 @@ bool dip_switch_gpio_init(void)
 void read_dip_switch(uint32_t * const pin_input)
 {
     
-    *pin_input = (~(NRF_P0->IN >> DIP_SWITCH_0) & 0x7);
+    *pin_input = ~(((NRF_P0->IN >> DIP_SWITCH_0) & 0x1) |  
+                 ((NRF_P0->IN >> (DIP_SWITCH_1 - 1)) & 0x2) |
+                 ((NRF_P0->IN >> (DIP_SWITCH_2 - 2)) & 0x4)) & 0x7;
 }
 
 bool gpio_pin_init(const gpio_config_t * const p_config)

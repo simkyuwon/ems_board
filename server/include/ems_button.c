@@ -23,15 +23,3 @@ bool button_event_init(nrfx_gpiote_pin_t pin_number)
     NVIC_ClearPendingIRQ(GPIOTE_IRQn);
     NVIC_EnableIRQ(GPIOTE_IRQn);
 }
-
-void GPIOTE_IRQHandler()
-{
-    for(uint16_t ch_num = 0; ch_num < GPIOTE_CH_NUM; ch_num++)
-    {
-        if(NRF_GPIOTE->EVENTS_IN[ch_num])
-        {
-            NRF_GPIOTE->EVENTS_IN[ch_num] = 0;
-            printf("GPIOTE%d_Handler\n", ch_num);
-        }
-    }
-}

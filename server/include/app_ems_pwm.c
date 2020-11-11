@@ -35,8 +35,6 @@ static void ems_pwm_state_move_set_cb(const ems_pwm_server_t * p_self,
 const ems_pwm_server_callbacks_t ems_pwm_srv_cbs = {
   .ems_pwm_cbs.set_cb = ems_pwm_state_set_cb,
   .ems_pwm_cbs.get_cb = ems_pwm_state_get_cb,
-//  .ems_pwm_cbs.delta_set_cb = ems_pwm_state_delta_set_cb,
-//  .ems_pwm_cbs.move_set_cb = ems_pwm_state_move_set_cb
 };
 
 static void transition_parameters_set(app_ems_pwm_server_t * p_app,
@@ -148,7 +146,8 @@ static void transition_complete_cb(const app_transition_t * p_transition){
     ems_pwm_status_params_t status = {
               .present_pwm_duty = p_app->state.present_duty,
               .target_pwm_duty = p_app->state.target_duty,
-              .remaining_time_ms = 0};
+              .remaining_time_ms = 0
+              };
     (void) ems_pwm_server_status_publish(&p_app->server, &status);
 
     if(p_app->ems_pwm_transition_cb != NULL){
@@ -166,7 +165,8 @@ void app_ems_pwm_status_publish(app_ems_pwm_server_t * p_app){
   ems_pwm_status_params_t status = {
         .present_pwm_duty = p_app->state.present_duty,
         .target_pwm_duty = p_app->state.target_duty,
-        .remaining_time_ms = 0};
+        .remaining_time_ms = 0
+        };
    
    (void) ems_pwm_server_status_publish(&p_app->server, &status);
 }

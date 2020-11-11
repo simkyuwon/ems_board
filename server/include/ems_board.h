@@ -5,7 +5,6 @@
 #define DIP_SWITCH_1 (7)
 #define DIP_SWITCH_2 (8)
 
-
 #define PWM_0_L_PIN (17)
 #define PWM_0_R_PIN (18)
 #define PWM_1_L_PIN (19)

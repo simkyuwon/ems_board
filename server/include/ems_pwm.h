@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "nrf_assert.h"
 #include "nrf_drv_pwm.h"
+#include "nrf_drv_ppi.h"
 #include "log.h"
 
 #define PWM_NOPIN         (0xFFFFFFFF)
@@ -21,25 +21,41 @@
         .pulse_count        = count_in                                       \
     }                                                                        \
 
-#define VOLTAGE_PWM_CONFIG(voltage_in, pin_in)  \
-    {                                           \
-        .pin  = pin_in,                         \
-        .voltage  = voltage_in                  \
-    }                                           \
+#define VOLTAGE_PWM_CONFIG(pin_in, p_seq_in)  \
+    {                                         \
+        .pin                = pin_in,         \
+        .p_seq              = p_seq_in        \
+    }                                         \
 
+#define PWM_SEQUENCE_CONFIG(p_dma_in, period_ms_in)       \
+    {                                                     \
+        .p_dma      = p_dma_in,                           \
+        .count      = sizeof(p_dma_in)/sizeof(uint16_t),  \
+        .period_ms = period_ms_in                         \
+    }                                                     \
 
 #define WAVEFORM0_PWM_NUMBER  (0)
 #define WAVEFORM1_PWM_NUMBER  (1)
 #define VOLTAGE_PWM_NUMBER    (2)
 
-#define PWM_POLARITY_Msk (0x8000UL)
-#define PWM_COMPARE_Msk (0x7FFFUL)
+#define PWM_POLARITY_Msk  (0x8000UL)
+#define PWM_COMPARE_Msk   (0x7FFFUL)
+
+#define PWM_NORMAL_SEQUENCE_NUMBER  (0)
+#define PWM_SIN_SEQUENCE_NUMBER     (1)
 
 typedef enum
 {
     PWM_POLARITY_ACTIVE_LOW = 0,
     PWM_POLARITY_ACTIVE_HIGH = 1 << 15,
 }pwm_polarity_t;
+
+typedef struct
+{
+    uint16_t *      p_dma;
+    uint32_t        count;
+    uint32_t        period_ms;
+}pwm_sequence_config_t;
 
 typedef struct
 {
@@ -59,13 +75,15 @@ bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config
 
 typedef struct
 {
-    uint32_t    pin;
-    uint32_t    voltage;
+    uint32_t                    pin;
+    pwm_sequence_config_t *     p_seq;
 }voltage_pwm_config_t;
 
 bool voltage_pwm_init(const uint32_t pwm_number, const voltage_pwm_config_t * const p_config);
 
 bool change_voltage(int16_t duty);
+
+bool voltage_sequence_change(const pwm_sequence_config_t * const p_config);
 
 bool pwm_start(const uint32_t pwm_number);
 
