@@ -1679,7 +1679,7 @@
 // <4=> SDK Memory Manager (nrf_malloc)
 
 #ifndef NRF_CRYPTO_ALLOCATOR
-#define NRF_CRYPTO_ALLOCATOR 0
+#define NRF_CRYPTO_ALLOCATOR 3
 #endif
 
 // <e> NRF_CRYPTO_BACKEND_CC310_BL_ENABLED - Enable the ARM Cryptocell CC310 reduced backend.
@@ -6594,14 +6594,14 @@
 
 
 #ifndef TIMER3_ENABLED
-#define TIMER3_ENABLED 1
+#define TIMER3_ENABLED 0
 #endif
 
 // <q> TIMER4_ENABLED  - Enable TIMER4 instance
 
 
 #ifndef TIMER4_ENABLED
-#define TIMER4_ENABLED 1
+#define TIMER4_ENABLED 0
 #endif
 
 // </e>

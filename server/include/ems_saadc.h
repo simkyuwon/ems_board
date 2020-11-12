@@ -4,13 +4,11 @@
 #include <stdbool.h>
 
 #include "nrf_drv_saadc.h"
+#include "ems_board.h"
 #include "log.h"
 
 #define SAADC_CHANNEL_COUNT (3)
 #define SAMPLES_IN_BUFFER (1)
-
-#define VOLTAGE_SAADC_CHANNEL (0)
-#define TEMPERATURE_SAADC_CHANNEL (1)
 
 #define VOLTAGE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) \
     {                                                                                 \

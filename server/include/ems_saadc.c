@@ -19,7 +19,6 @@ const double pt100_resistance_table[] = {
 157.33
 };
 
-
 static volatile SAADC_CH_Type* nrf_saadc_base(const uint32_t saadc_ch_number)
 {
     if(saadc_ch_number >= sizeof(NRF_SAADC->CH)/sizeof(SAADC_CH_Type))
