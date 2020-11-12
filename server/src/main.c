@@ -39,9 +39,8 @@
 #include <string.h>
 
 /* HAL */
-#include "boards.h"
-//#include "simple_hal.h"
-#include "pwm_utils.h"
+//#include "boards.h"
+//#include "pwm_utils.h"
 #include "app_timer.h"
 #include "app_pwm.h"
 
@@ -64,8 +63,8 @@
 #include "app_ems_pwm.h"
 
 /* Logging and RTT */
+#include "nrf_log.h"
 #include "log.h"
-//#include "rtt_input.h"
 
 /* Example specific includes */
 #include "app_config.h"
@@ -73,19 +72,26 @@
 #include "nrf_mesh_config_examples.h"
 #include "ble_softdevice_support.h"
 
+/*  */
+#include "ems_pwm.h"
+#include "ems_saadc.h"
+#include "ems_gpio.h"
+#include "ems_board.h"
+
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
-#define ONOFF_SERVER_0_LED          (BSP_LED_0)
-
-#define APP_EMS_PWM_DUTY_ELEMENT_INDEX   (0)
-#define APP_EMS_PWM_VOLTAGE_ELEMENT_INDEX   (1)
+#define APP_EMS_PWM_ELEMENT_INDEX   (0)
 
 /* Controls if the model instance should force all mesh messages to be segmented messages. */
 #define APP_FORCE_SEGMENTATION      (false)
 /* Controls the MIC size used by the model instance for sending the mesh messages. */
 #define APP_MIC_SIZE                (NRF_MESH_TRANSMIC_SIZE_SMALL)
 
+#define PWM_NORMAL_SEQUENCE_NUMBER  (0)
+#define PWM_SIN_SEQUENCE_NUMBER     (1)
+
+static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(1);
 
 /*****************************************************************************
  * Forward declaration of static functions
@@ -95,75 +101,62 @@ static void app_ems_pwm_duty_server_get_cb(const app_ems_pwm_server_t * p_server
 static void app_ems_pwm_duty_server_transition_cb(const app_ems_pwm_server_t * p_server,
                                                 uint32_t transition_time_ms, int16_t duty);
 
-static void app_ems_pwm_voltage_server_set_cb(const app_ems_pwm_server_t * p_server, int16_t duty);
-static void app_ems_pwm_voltage_server_get_cb(const app_ems_pwm_server_t * p_server, int16_t * p_present_duty);
-static void app_ems_pwm_voltage_server_transition_cb(const app_ems_pwm_server_t * p_server,
-                                                uint32_t transition_time_ms, int16_t duty);
 /*****************************************************************************
  * Static variables
  *****************************************************************************/
-static bool m_device_provisioned;
-static APP_PWM_INSTANCE(PWM1, 1);
-static app_pwm_config_t m_pwm1_config = APP_PWM_DEFAULT_CONFIG_2CH(1000, BSP_LED_2, BSP_LED_3);
-static APP_PWM_INSTANCE(PWM0, 3);
-static app_pwm_config_t m_pwm0_config = APP_PWM_DEFAULT_CONFIG_2CH(1000, BSP_LED_0, BSP_LED_1);
+static const uint16_t origin_normal_sequence[] = {100};
+static const uint16_t origin_sin_sequence[] = {0, 17, 34, 50, 64, 76, 86, 93, 98, 100, 98, 93, 86, 76, 64, 50, 34, 17}; 
+static const uint16_t origin_test_sequence[] = {25, 100};
 
-APP_EMS_PWM_SERVER_DEF(m_ems_pwm_server_0,
+static bool m_device_provisioned;
+static uint16_t saadc_result[SAMPLES_IN_BUFFER * SAADC_CHANNEL_COUNT];
+static pwm_sequence_config_t m_normal_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_normal_sequence, 1);
+static pwm_sequence_config_t m_sin_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_sin_sequence, 5);
+static pwm_sequence_config_t m_test_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_test_sequence, 10);
+
+static waveform_pwm_config_t m_waveform0_pwm_config =  WAVEFORM_PWM_CONFIG(44000, 400, 3, PWM_0_L_PIN, PWM_0_R_PIN);
+static waveform_pwm_config_t m_waveform1_pwm_config =  WAVEFORM_PWM_CONFIG(44000, 400, 3, PWM_1_L_PIN, PWM_1_R_PIN);
+static voltage_pwm_config_t m_voltage_pwm_config = VOLTAGE_PWM_CONFIG(PWM_VOLTAGE_PIN, &m_test_pwm_sequence_config);
+
+APP_EMS_PWM_SERVER_DEF(m_ems_pwm_server,
                       APP_FORCE_SEGMENTATION,
                       APP_MIC_SIZE,
                       app_ems_pwm_duty_server_set_cb,
                       app_ems_pwm_duty_server_get_cb,
                       app_ems_pwm_duty_server_transition_cb)
 
-
-APP_EMS_PWM_SERVER_DEF(m_ems_pwm_server_1,
-                      APP_FORCE_SEGMENTATION,
-                      APP_MIC_SIZE,
-                      app_ems_pwm_voltage_server_set_cb,
-                      app_ems_pwm_voltage_server_get_cb,
-                      app_ems_pwm_voltage_server_transition_cb)
+/*************************************************************************************************/
 
 static void app_ems_pwm_duty_server_set_cb(const app_ems_pwm_server_t * p_server, int16_t duty){
-  app_pwm_channel_duty_set(&PWM1, 0, 100 - ((uint32_t)duty - INT16_MIN) * 100 /(INT16_MAX - INT16_MIN));
-  app_pwm_channel_duty_set(&PWM1, 1, ((uint32_t)duty - INT16_MIN) * 100 /(INT16_MAX - INT16_MIN));
-    //hal_led_pin_set(ONOFF_SERVER_0_LED, onoff);
+    duty -= INT16_MIN;
+
+    //change_voltage(duty * 100 / UINT16_MAX);
+    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "voltage : %d\n", duty * 100 / UINT16_MAX);
+
+    //waveform_pulse_count_change(WAVEFORM0_PWM_NUMBER, &m_waveform0_pwm_config, duty / 1000);
+    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "cnt : %d\n", duty / 1000);
+    
+    waveform_pulse_period_change(WAVEFORM0_PWM_NUMBER, &m_waveform0_pwm_config, duty + 10000);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "period : %d\n", duty + 10000);
 }
 
 static void app_ems_pwm_duty_server_get_cb(const app_ems_pwm_server_t * p_server, int16_t * p_present_duty){
-    //*p_present_onoff = hal_led_pin_get(ONOFF_SERVER_0_LED);
 }
 
 static void app_ems_pwm_duty_server_transition_cb(const app_ems_pwm_server_t * p_server,
                                                 uint32_t transition_time_ms, int16_t duty){
-    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Transition time: %d, Target OnOff: %d\n",
-     //                                  transition_time_ms, target_onoff);
-}
-
-
-static void app_ems_pwm_voltage_server_set_cb(const app_ems_pwm_server_t * p_server, int16_t duty){
-  app_pwm_channel_duty_set(&PWM0, 1, 100 - ((uint32_t)duty - INT16_MIN) * 100 /(INT16_MAX - INT16_MIN));
-  app_pwm_channel_duty_set(&PWM0, 0, ((uint32_t)duty - INT16_MIN) * 100 /(INT16_MAX - INT16_MIN));
-}
-
-static void app_ems_pwm_voltage_server_get_cb(const app_ems_pwm_server_t * p_server, int16_t * p_present_duty){
-}
-
-static void app_ems_pwm_voltage_server_transition_cb(const app_ems_pwm_server_t * p_server,
-                                                uint32_t transition_time_ms, int16_t duty){ 
+    waveform_pulse_count_change(WAVEFORM0_PWM_NUMBER, &m_waveform0_pwm_config, duty / 1000);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "cnt : %d\n", duty / 1000);
 }
 
 static void app_model_init(void)
 {
-    ERROR_CHECK(app_ems_pwm_init(&m_ems_pwm_server_0, APP_EMS_PWM_DUTY_ELEMENT_INDEX));
-    ERROR_CHECK(app_ems_pwm_init(&m_ems_pwm_server_1, APP_EMS_PWM_VOLTAGE_ELEMENT_INDEX));
+    ERROR_CHECK(app_ems_pwm_init(&m_ems_pwm_server, APP_EMS_PWM_ELEMENT_INDEX));
 }
-
-/*************************************************************************************************/
 
 static void node_reset(void)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Node reset  -----\n");
-//    hal_led_blink_ms(LEDS_MASK, LED_BLINK_INTERVAL_MS, LED_BLINK_CNT_RESET);
     /* This function may return if there are ongoing flash operations. */
     mesh_stack_device_reset();
 }
@@ -176,79 +169,12 @@ static void config_server_evt_cb(const config_server_evt_t * p_evt)
     }
 }
 
-#if NRF_MESH_LOG_ENABLE
-static const char m_usage_string[] =
-    "\n"
-    "\t\t-------------------------------------------------------------------------------\n"
-    "\t\t Button/RTT 1) LED state will toggle and inform clients about the state change.\n"
-    "\t\t Button/RTT 4) Clear all the states to reset the node.\n"
-    "\t\t-------------------------------------------------------------------------------\n";
-#endif
-
-static void button_event_handler(uint32_t button_number)
-{
-    /* Increase button number because the buttons on the board is marked with 1 to 4 */
-    button_number++;
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Button %u pressed\n", button_number);
-    switch (button_number)
-    {
-        /* Pressing SW1 on the Development Kit will result in LED state to toggle and trigger
-        the STATUS message to inform client about the state change. This is a demonstration of
-        state change publication due to local event. */
-        case 1:
-        {
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "User action \n");
-   //         hal_led_pin_set(ONOFF_SERVER_0_LED, !hal_led_pin_get(ONOFF_SERVER_0_LED));
-            //app_onoff_status_publish(&m_onoff_server_0);
-            break;
-        }
-
-        /* Initiate node reset */
-        case 4:
-        {
-            /* Clear all the states to reset the node. */
-            if (mesh_stack_is_device_provisioned())
-            {
-#if MESH_FEATURE_GATT_PROXY_ENABLED
-                (void) proxy_stop();
-#endif
-                mesh_stack_config_clear();
-                node_reset();
-            }
-            else
-            {
-                __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "The device is unprovisioned. Resetting has no effect.\n");
-            }
-            break;
-        }
-
-        default:
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, m_usage_string);
-            break;
-    }
-}
-
-/*static void app_rtt_input_handler(int key)
-{
-    if (key >= '1' && key <= '4')
-    {
-        uint32_t button_number = key - '1';
-        button_event_handler(button_number);
-    }
-    else
-    {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, m_usage_string);
-    }
-}*/
-
 static void device_identification_start_cb(uint8_t attention_duration_s)
 {
-
 }
 
 static void provisioning_aborted_cb(void)
 {
-
 }
 
 static void unicast_address_print(void)
@@ -303,16 +229,8 @@ static void mesh_init(void)
     }
 }
 
-static void initialize(void)
-{
-    __LOG_INIT(LOG_SRC_APP | LOG_SRC_FRIEND, LOG_LEVEL_DBG1, LOG_CALLBACK_DEFAULT);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- BLE Mesh Light Switch Server Demo -----\n");
-
+static void ble_mesh_init(void){
     ERROR_CHECK(app_timer_init());
-
-#if BUTTON_BOARD
-    ERROR_CHECK(hal_buttons_init(button_event_handler));
-#endif
 
     ble_stack_init();
 
@@ -324,10 +242,95 @@ static void initialize(void)
     mesh_init();
 }
 
+static void saadc_init(void)
+{
+    saadc_config_t m_voltage_saadc_config = VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,
+                                                                 NRF_SAADC_GAIN1_6,
+                                                                 NRF_SAADC_REFERENCE_INTERNAL,
+                                                                 NRF_SAADC_ACQTIME_3US,
+                                                                 NRF_SAADC_INPUT_AIN0);
+
+    saadc_config_t m_temperature_saadc_config = TEMPERATURE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,
+                                                                         NRF_SAADC_RESISTOR_DISABLED,
+                                                                         NRF_SAADC_GAIN4,
+                                                                         NRF_SAADC_REFERENCE_INTERNAL,
+                                                                         NRF_SAADC_ACQTIME_3US,
+                                                                         NRF_SAADC_INPUT_AIN1,
+                                                                         NRF_SAADC_INPUT_AIN2);
+
+    if(!nrf_saadc_init(saadc_result, SAMPLES_IN_BUFFER * SAADC_CHANNEL_COUNT))
+          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "saadc init failed\n");
+
+    if(!voltage_saadc_init(VOLTAGE_SAADC_CHANNEL, &m_voltage_saadc_config))
+          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "voltage saadc init failed\n");
+
+    if(!temperature_saadc_init(TEMPERATURE_SAADC_CHANNEL, &m_temperature_saadc_config))
+          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "temperature saadc init failed\n");
+}
+
+static void pwm_init(void)
+{
+    voltage_sequence_init(&m_normal_pwm_sequence_config);
+    voltage_sequence_init(&m_sin_pwm_sequence_config);
+    voltage_sequence_init(&m_test_pwm_sequence_config);
+
+    waveform_pwm_init(WAVEFORM0_PWM_NUMBER, &m_waveform0_pwm_config);
+    waveform_pwm_init(WAVEFORM1_PWM_NUMBER, &m_waveform1_pwm_config);
+    voltage_pwm_init(VOLTAGE_PWM_NUMBER, &m_voltage_pwm_config);
+}
+
+static void voltage_up_callback(void)
+{    
+    voltage_level_up(m_voltage_pwm_config.p_seq);
+}
+
+static void voltage_down_callback(void)
+{
+    voltage_level_down(m_voltage_pwm_config.p_seq);
+}
+
+static void voltage_normal_sequence(void)
+{
+    pwm_stop(VOLTAGE_PWM_NUMBER);
+    pwm_single_shot(VOLTAGE_PWM_NUMBER);
+    //if(m_voltage_pwm_config.p_seq->period_ms > 1)
+    //    voltage_period_set(&m_voltage_pwm_config, m_voltage_pwm_config.p_seq->period_ms - 1);
+    //voltage_sequence_mode_change(&m_voltage_pwm_config, &m_normal_pwm_sequence_config);
+}
+
+static void voltage_sin_sequence(void)
+{
+    pwm_start(VOLTAGE_PWM_NUMBER);
+    //voltage_period_set(&m_voltage_pwm_config, m_voltage_pwm_config.p_seq->period_ms + 1);
+    //voltage_sequence_mode_change(&m_voltage_pwm_config, &m_sin_pwm_sequence_config);
+}
+
+static void gpio_init(void)
+{
+    pulse_generator_init(PULSE_GENERATOR_PIN);
+    button_event_init(VOLTAGE_UP_PIN, voltage_up_callback);
+    button_event_init(VOLTAGE_DOWN_PIN, voltage_down_callback);
+    button_event_init(BUTTON_3, voltage_normal_sequence);
+    button_event_init(BUTTON_4, voltage_sin_sequence);
+    dip_switch_gpio_init(DIP_SWITCH_0);
+    dip_switch_gpio_init(DIP_SWITCH_1);
+    dip_switch_gpio_init(DIP_SWITCH_2);
+}
+
+static void initialize(void)
+{
+    nrf_drv_ppi_init();
+    nrf_drv_gpiote_init();
+
+    __LOG_INIT(LOG_SRC_APP | LOG_SRC_FRIEND, LOG_LEVEL_DBG1, LOG_CALLBACK_DEFAULT);
+    saadc_init();
+    ble_mesh_init();
+    pwm_init();
+    gpio_init();
+}
+
 static void start(void)
 {
-//    rtt_input_enable(app_rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
-
     if (!m_device_provisioned)
     {
         static const uint8_t static_auth_data[NRF_MESH_KEY_SIZE] = STATIC_AUTH_DATA;
@@ -352,10 +355,9 @@ static void start(void)
 
     ERROR_CHECK(mesh_stack_start());
 
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, m_usage_string);
-}
-
-void pwm_ready_callback(uint32_t pwm_id){
+    pwm_start(WAVEFORM0_PWM_NUMBER);
+    pwm_start(WAVEFORM1_PWM_NUMBER);
+    pwm_start(VOLTAGE_PWM_NUMBER);
 }
 
 int main(void)
@@ -363,15 +365,40 @@ int main(void)
     initialize();
     start();
 
-    app_pwm_init(&PWM0, &m_pwm0_config, pwm_ready_callback);
-    app_pwm_enable(&PWM0);
-    app_pwm_channel_duty_set(&PWM0, 0, 50);
+    uint64_t Vpwm_sum = 0;
+    uint64_t Vth_sum = 0;
+    uint64_t Vs_sum = 0;
+    int saadc_sampling_count = 0;
 
-    app_pwm_init(&PWM1, &m_pwm1_config, pwm_ready_callback);
-    app_pwm_enable(&PWM1);
-    app_pwm_channel_duty_set(&PWM1, 1, 50);
     for (;;)
-    {
-        (void)sd_app_evt_wait();
+    {  
+        saadc_buffer_update();
+        Vpwm_sum += (uint64_t)saadc_result[0];
+        Vth_sum += (uint64_t)saadc_result[1];
+        Vs_sum += (uint64_t)saadc_result[2];
+
+        if(++saadc_sampling_count >= 0x8000)
+        {
+            double Vpwm = Vpwm_sum * 3.6F / saadc_sampling_count / (1<<14);
+            double Vs = Vs_sum * 0.6F / saadc_sampling_count / (1<<14);
+            double Vth = Vth_sum * 0.6F / 4 / saadc_sampling_count / (1<<13);
+            saadc_sampling_count = 0;
+            Vpwm_sum = 0;
+            Vs_sum = 0;
+            Vth_sum = 0;
+            double Rth = 220.0F * (Vs - 2 * Vth) / (Vs + 2 * Vth);
+            double them = pt100_res2them(Rth);
+            //char str[50];
+            //int intVs = (int)(Vs * 1000000);
+            //int intVth = (int)(Vth * 1000000)
+            //int intRth = (int)(Rth * 10000); 
+            //int intThem = (int)(them * 10000);
+            //sprintf(str, "Vs : %d.%06d Vth : %d.%06d Rth : %d.%04d them:%d.%04dC\n",
+            //         intVs/1000000, intVs%1000000, intVth/1000000, intVth%1000000, intRth/10000, intRth%10000, intThem/10000, intThem%10000); 
+            //printf("pt100) %s\n", str);
+        }
+       //(void)sd_app_evt_wait();
     }
+
+    return 0;
 }
