@@ -54,6 +54,7 @@ bool voltage_saadc_init(const uint32_t saadc_ch_number,
         return false;
     }
     
+    //RESULT = V(P) * GAIN / REFERENCE * 2 ^ (RESOLUTION)
     p_nrf_saadc_ch->PSELP = (p_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
     p_nrf_saadc_ch->CONFIG = (p_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
                              (p_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
@@ -64,38 +65,42 @@ bool voltage_saadc_init(const uint32_t saadc_ch_number,
     return true;
 }
 
-bool temperature_saadc_init(const uint32_t saadc_ch_number,
-                            const saadc_config_t * const p_config)
+bool temperature_saadc_init(const uint32_t sensor_saadc_ch_number,
+                            const saadc_config_t * const p_sensor_config,
+                            const uint32_t vss_saadc_ch_number,
+                            const saadc_config_t * const p_vss_config)
 {
-    volatile SAADC_CH_Type* p_nrf_th_saadc_ch = nrf_saadc_base(saadc_ch_number);
+    volatile SAADC_CH_Type* p_nrf_th_saadc_ch = nrf_saadc_base(sensor_saadc_ch_number);
 
     if(p_nrf_th_saadc_ch == NULL)
     {
         return false;
     }
 
-    p_nrf_th_saadc_ch->PSELP = (p_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_th_saadc_ch->PSELN = (p_config->pin_n << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_th_saadc_ch->CONFIG = (p_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
-                                (p_config->resistor_n << SAADC_CH_CONFIG_RESN_Pos) |
-                                (p_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
-                                (p_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
-                                (p_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
+    //RESULT = [V(P) - V(N)] * GAIN / REFERENCE * 2 ^ (RESOLUTION - 1)
+    p_nrf_th_saadc_ch->PSELP = (p_sensor_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
+    p_nrf_th_saadc_ch->PSELN = (p_sensor_config->pin_n << SAADC_CH_PSELP_PSELP_Pos);
+    p_nrf_th_saadc_ch->CONFIG = (p_sensor_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
+                                (p_sensor_config->resistor_n << SAADC_CH_CONFIG_RESN_Pos) |
+                                (p_sensor_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
+                                (p_sensor_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
+                                (p_sensor_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
                                 (SAADC_CH_CONFIG_MODE_Diff << SAADC_CH_CONFIG_MODE_Pos) |
                                 (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
 
-    volatile SAADC_CH_Type* p_nrf_ref_saadc_ch = nrf_saadc_base(saadc_ch_number + 1);
+    volatile SAADC_CH_Type* p_nrf_ref_saadc_ch = nrf_saadc_base(vss_saadc_ch_number);
    
     if(p_nrf_ref_saadc_ch == NULL)
     {
         return false;
     }
 
-    p_nrf_ref_saadc_ch->PSELP = (NRF_SAADC_INPUT_AIN3 << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_ref_saadc_ch->CONFIG = (p_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
-                                 (SAADC_CH_CONFIG_GAIN_Gain1 << SAADC_CH_CONFIG_GAIN_Pos) |
-                                 (SAADC_CH_CONFIG_REFSEL_Internal << SAADC_CH_CONFIG_REFSEL_Pos) |
-                                 (p_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
+    //RESULT = V(P) * GAIN / REFERENCE * 2 ^ (RESOLUTION)
+    p_nrf_ref_saadc_ch->PSELP = (p_vss_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
+    p_nrf_ref_saadc_ch->CONFIG = (p_vss_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
+                                 (p_vss_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
+                                 (p_vss_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
+                                 (p_vss_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
                                  (SAADC_CH_CONFIG_MODE_SE << SAADC_CH_CONFIG_MODE_Pos) |
                                  (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
     return true;

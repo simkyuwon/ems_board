@@ -5,7 +5,8 @@ static nrf_ppi_channel_t pulse_generator_ppi_channel;
 
 bool dip_switch_gpio_init(uint32_t pin_number)
 {
-    gpio_config_t dip_switch = DIP_SWITCH_GPIO_CONFIG(pin_number, GPIO_PIN_CNF_PULL_Pullup); 
+    gpio_config_t dip_switch = DIP_SWITCH_GPIO_CONFIG(pin_number,                 //input pin
+                                                      GPIO_PIN_CNF_PULL_Pullup);  //resistor pullup
 
     if(!gpio_pin_init(&dip_switch))
     {
@@ -17,7 +18,7 @@ bool dip_switch_gpio_init(uint32_t pin_number)
 
 void read_dip_switch(uint32_t * const pin_input)
 {
-    *pin_input = ~(((NRF_P0->IN >> DIP_SWITCH_0) & 0x1) |  
+    *pin_input = ~(((NRF_P0->IN >> DIP_SWITCH_0) & 0x1) |
                  ((NRF_P0->IN >> (DIP_SWITCH_1 - 1)) & 0x2) |
                  ((NRF_P0->IN >> (DIP_SWITCH_2 - 2)) & 0x4)) & 0x7;
 }
@@ -35,8 +36,12 @@ bool pulse_generator_init(const uint32_t pin_number)
         return false;
     }
 
-    gpiote_config_t m_gpiote_config = PULSE_GPIOTE_CONFIG(pin_number, GPIOTE_CONFIG_POLARITY_Toggle, GPIOTE_CONFIG_OUTINIT_Low);
-    uint32_t gpiote_number = gpiote_config_init(&m_gpiote_config, NULL);
+    gpiote_config_t m_gpiote_config = PULSE_GPIOTE_CONFIG(pin_number,                     //gpiote task output pin
+                                                          GPIOTE_CONFIG_POLARITY_Toggle,  //task toggle
+                                                          GPIOTE_CONFIG_OUTINIT_Low);     //pin init low
+
+    uint32_t gpiote_number = gpiote_config_init(&m_gpiote_config,                         //pin config
+                                                NULL);                                    //callback function
     
     if(gpiote_number < 0)
     {
@@ -49,10 +54,11 @@ bool pulse_generator_init(const uint32_t pin_number)
 
     PULSE_GENERATOR_TIMER->INTENSET = (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos) |
                                       (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
-    PULSE_GENERATOR_TIMER->CC[0] = 0;
+    PULSE_GENERATOR_TIMER->CC[0] = 1;   //0 == OFF, 1 == ON
     PULSE_GENERATOR_TIMER->CC[1] = 1;
     PULSE_GENERATOR_TIMER->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled << TIMER_SHORTS_COMPARE1_CLEAR_Pos);
 
+    //pulse pin toggle ppi
     nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel);
     nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel, (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[0]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
     nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel);

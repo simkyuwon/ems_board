@@ -59,7 +59,6 @@ void GPIOTE_IRQHandler()
                 gpiote_event_config_array[ch_num].cb();
             }
             NRF_GPIOTE->EVENTS_IN[ch_num] = 0;
-            printf("GPIOTE%d_Handler\n", ch_num);
         }
     }
 }

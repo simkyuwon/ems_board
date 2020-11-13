@@ -10,26 +10,30 @@
 #define SAADC_CHANNEL_COUNT (3)
 #define SAMPLES_IN_BUFFER (1)
 
-#define VOLTAGE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) \
-    {                                                                                 \
-        .resistor_p   = resistor_in,                                                  \
-        .gain         = gain_in,                                                      \
-        .reference   = reference_in,                                                  \
-        .acq_time     = acq_time_in,                                                  \
-        .pin_p        = pin_in                                                        \
-    }                                                                                 \
+#define SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) \
+    {                                                                            \
+        .resistor_p   = resistor_in,                                             \
+        .gain         = gain_in,                                                 \
+        .reference    = reference_in,                                            \
+        .acq_time     = acq_time_in,                                             \
+        .pin_p        = pin_in                                                   \
+    }                                                                            \
 
-#define TEMPERATURE_SAADC_CONFIG(resistor_p_in, resistor_n_in, gain_in, reference_in, acq_time_in, pin_p_in, pin_n_in)  \
-    {                                                                                                                   \
-        .resistor_p   = resistor_p_in,                                                                                  \
-        .resistor_n   = resistor_n_in,                                                                                  \
-        .gain         = gain_in,                                                                                        \
-        .reference   = reference_in,                                                                                    \
-        .acq_time     = acq_time_in,                                                                                    \
-        .pin_p        = pin_p_in,                                                                                       \
-        .pin_n        = pin_n_in                                                                                        \
-    }                                                                                                                   \
-    
+#define VOLTAGE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in)
+
+#define TEMPERATURE_VSS_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in)
+
+#define TEMPERATURE_DIFF_SAADC_CONFIG(resistor_p_in, resistor_n_in, gain_in, reference_in, acq_time_in, pin_p_in, pin_n_in) \
+    {                                                                                                                       \
+        .resistor_p   = resistor_p_in,                                                                                      \
+        .resistor_n   = resistor_n_in,                                                                                      \
+        .gain         = gain_in,                                                                                            \
+        .reference    = reference_in,                                                                                       \
+        .acq_time     = acq_time_in,                                                                                        \
+        .pin_p        = pin_p_in,                                                                                           \
+        .pin_n        = pin_n_in                                                                                            \
+    }                                                                                                                       \ 
+       
 #define MIN_TEMPERATURE 0
 #define MAX_TEMPERATURE 150
 
@@ -52,8 +56,10 @@ bool nrf_saadc_init(const uint16_t * p_saadc_result,
 bool voltage_saadc_init(const uint32_t saadc_ch_number,
                         const saadc_config_t * const p_config);
 
-bool temperature_saadc_init(const uint32_t saadc_ch_number,
-                            const saadc_config_t * const p_config);
+bool temperature_saadc_init(const uint32_t sensor_saadc_ch_number,
+                            const saadc_config_t * const p_sensor_config,
+                            const uint32_t vss_saadc_ch_number,
+                            const saadc_config_t * const p_vss_config);
 
 void saadc_buffer_update(void);
 
