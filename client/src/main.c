@@ -55,12 +55,12 @@
 #include "mesh_app_utils.h"
 
 /* Models */
-#include "ems_pwm_client.h"
-#include "app_ems_pwm.h"
+#include "ems_client.h"
+#include "app_ems_board.h"
 
 /* Logging and RTT */
 #include "log.h"
-#include "rtt_input.h"
+//#include "rtt_input.h"
 
 /* Example specific includes */
 #include "app_config.h"
@@ -94,20 +94,20 @@
 #define APP_MIC_SIZE                 (NRF_MESH_TRANSMIC_SIZE_SMALL)
 
 #define MAX_AVAILABLE_SERVER_NODE_NUMBER  (40)
-#define CLIENT_MODEL_INSTANCE_COUNT  (1)
-#define APP_EMS_PWM_DELAY_MS           (50)
-#define APP_EMS_PWM_TRANSITION_TIME_MS (100)
+#define CLIENT_MODEL_INSTANCE_COUNT       (1)
+#define APP_EMS_PWM_DELAY_MS              (50)
+#define APP_EMS_PWM_TRANSITION_TIME_MS    (100)
 
 //USB CDC ACM
-#define CDC_ACM_COMM_INTERFACE  0
+#define CDC_ACM_COMM_INTERFACE  (0)
 #define CDC_ACM_COMM_EPIN       NRF_DRV_USBD_EPIN2
 
-#define CDC_ACM_DATA_INTERFACE  1
+#define CDC_ACM_DATA_INTERFACE  (1)
 #define CDC_ACM_DATA_EPIN       NRF_DRV_USBD_EPIN1
 #define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT1
 
-#define CDC_ACM_BUFFER_SIZE 1024
-#define READ_SIZE 1
+#define CDC_ACM_BUFFER_SIZE     (1024)
+#define READ_SIZE               (1)
 
 static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                                     app_usbd_cdc_acm_user_event_t event);
@@ -123,20 +123,20 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
 /*****************************************************************************
  * Forward declaration of static functions
  *****************************************************************************/
-static void app_ems_pwm_client_status_cb(const ems_pwm_client_t *p_self,
-                                         const access_message_rx_meta_t *p_meta,
-                                         const ems_pwm_status_params_t *p_in);
-static void app_ems_pwm_client_publish_interval_cb(access_model_handle_t handle, void *p_self);
-static void app_ems_pwm_client_transaction_status_cb(access_model_handle_t model_handle,
-                                                    void *p_args,
-                                                    access_reliable_status_t status);
+static void app_ems_client_status_cb(const ems_client_t *p_self,
+                                     const access_message_rx_meta_t *p_meta,
+                                     const ems_status_params_t *p_in);
+static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self);
+static void app_ems_client_transaction_status_cb(access_model_handle_t model_handle,
+                                                 void *p_args,
+                                                 access_reliable_status_t status);
 
 //USB CDC ACM
 static void usbd_user_ev_handler(app_usbd_event_type_t event);
 /*****************************************************************************
  * Static variables
  *****************************************************************************/
-static ems_pwm_client_t m_clients[CLIENT_MODEL_INSTANCE_COUNT];
+static ems_client_t m_clients[CLIENT_MODEL_INSTANCE_COUNT];
 static bool m_device_provisioned;
 //USB CDC ACM
 static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;
@@ -144,26 +144,26 @@ static char m_cdc_tx_buffer[CDC_ACM_BUFFER_SIZE];
 static char m_cdc_rx_buffer[CDC_ACM_BUFFER_SIZE];
 static bool m_usb_connected = false;
 
-static const ems_pwm_client_callbacks_t client_cbs =
+static const ems_client_callbacks_t client_cbs =
 {
-    .ems_pwm_status_cb = app_ems_pwm_client_status_cb,
-    .ack_transaction_status_cb = app_ems_pwm_client_transaction_status_cb,
-    .periodic_publish_cb = app_ems_pwm_client_publish_interval_cb
+    .ems_status_cb = app_ems_client_status_cb,
+    .ack_transaction_status_cb = app_ems_client_transaction_status_cb,
+    .periodic_publish_cb = app_ems_client_publish_interval_cb
 };
 
-static void app_ems_pwm_client_status_cb(const ems_pwm_client_t *p_self,
-                                         const access_message_rx_meta_t *p_meta,
-                                         const ems_pwm_status_params_t *p_in)
+static void app_ems_client_status_cb(const ems_client_t *p_self,
+                                     const access_message_rx_meta_t *p_meta,
+                                     const ems_status_params_t *p_in)
 {
 }
 
-static void app_ems_pwm_client_publish_interval_cb(access_model_handle_t handle, void *p_self)
+static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self)
 {
 }
 
-static void app_ems_pwm_client_transaction_status_cb(access_model_handle_t model_handle,
-                                                    void *p_args,
-                                                    access_reliable_status_t status)
+static void app_ems_client_transaction_status_cb(access_model_handle_t model_handle,
+                                                 void *p_args,
+                                                 access_reliable_status_t status)
 {
     switch(status)
     {
@@ -229,106 +229,6 @@ static void config_server_evt_cb(const config_server_evt_t * p_evt)
     }
 }
 
-#if NRF_MESH_LOG_ENABLE
-static const char m_usage_string[] =
-    "\n"
-    "\t\t------------------------------------------------------------------------------------\n"
-    "\t\t Button/RTT 1) Send a message to the odd group (address: 0xC003) to turn on LED 1.\n"
-    "\t\t Button/RTT 2) Send a message to the odd group (address: 0xC003) to turn off LED 1.\n"
-    "\t\t Button/RTT 3) Send a message to the even group (address: 0xC002) to turn on LED 1.\n"
-    "\t\t Button/RTT 4) Send a message to the even group (address: 0xC002) to turn off LED 1.\n"
-    "\t\t------------------------------------------------------------------------------------\n";
-#endif
-
-static void button_event_handler(uint32_t button_number)
-{
-    // Increase button number because the buttons on the board is marked with 1 to 4 
-    button_number++;
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Button %u pressed\n", button_number);
-
-    uint32_t status = NRF_SUCCESS;
-    ems_pwm_set_params_t set_params;
-    model_transition_t transition_params;
-    static uint8_t tid = 0;
-
-    switch(button_number)
-    {
-        case 1:
-        case 3:
-            set_params.pwm_duty = INT16_MIN;
-            break;
-
-        case 2:
-        case 4:
-            set_params.pwm_duty = INT16_MAX;
-            break;
-    }
-
-    set_params.tid = tid++;
-    transition_params.delay_ms = 0;
-    transition_params.transition_time_ms = 0;
-
-    switch (button_number)
-    {
-        case 1:
-        case 2:
-            // Demonstrate acknowledged transaction, using 1st client model instance
-            // In this examples, users will not be blocked if the model is busy
-            (void)access_model_reliable_cancel(m_clients[0].model_handle);
-            status = ems_pwm_client_set(&m_clients[0], &set_params, &transition_params);
-            break;
-
-        case 3:
-        case 4:
-            // Demonstrate un-acknowledged transaction, using 2nd client model instance 
-            status = ems_pwm_client_set_unack(&m_clients[0], &set_params,
-                                                    &transition_params, APP_UNACK_MSG_REPEAT_COUNT);
-            break;
-        default:
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, m_usage_string);
-            break;
-    }
-
-    switch (status)
-    {
-        case NRF_SUCCESS:
-            break;
-
-        case NRF_ERROR_NO_MEM:
-        case NRF_ERROR_BUSY:
-        case NRF_ERROR_INVALID_STATE:
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Client %u cannot send\n", button_number);
-            break;
-
-        case NRF_ERROR_INVALID_PARAM:
-            /* Publication not enabled for this client. One (or more) of the following is wrong:
-             * - An application key is missing, or there is no application key bound to the model
-             * - The client does not have its publication state set
-             *
-             * It is the provisioner that adds an application key, binds it to the model and sets
-             * the model's publication state.
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Publication not configured for client %u\n", button_number);*/
-            break;
-
-        default:
-            ERROR_CHECK(status);
-            break;
-    }
-}
-
-static void rtt_input_handler(int key)
-{
-    if (key >= '1' && key <= '4')
-    {
-        uint32_t button_number = key - '1';
-        button_event_handler(button_number);
-    }
-    else
-    {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, m_usage_string);
-    }
-}
-
 static void models_init_cb(void)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Initializing and adding models\n");
@@ -340,7 +240,7 @@ static void models_init_cb(void)
         m_clients[i].settings.force_segmented = APP_FORCE_SEGMENTATION;
         m_clients[i].settings.transmic_size = APP_MIC_SIZE;
        
-        ERROR_CHECK(ems_pwm_client_init(&m_clients[i], i + 1));
+        ERROR_CHECK(ems_client_init(&m_clients[i], i + 1));
     }
 }
 
@@ -406,6 +306,8 @@ static void initialize(void)
 static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                                     app_usbd_cdc_acm_user_event_t event)
 {
+    static uint8_t tid = 0;
+    static uint32_t rx_buffer_index = 0;
     app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
     ret_code_t ret;
 
@@ -414,9 +316,11 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
         case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
         {
             /*Set up the first transfer*/
+            rx_buffer_index = 0;
+
             ret = app_usbd_cdc_acm_read(&m_app_cdc_acm,
-                                   m_cdc_rx_buffer,
-                                   READ_SIZE);
+                                         m_cdc_rx_buffer,
+                                         READ_SIZE);
             UNUSED_VARIABLE(ret);
            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "CDC ACM port opened\n");
             break;
@@ -434,35 +338,43 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 
         case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
             {
-                uint32_t sum = 0;
-                __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Bytes waiting: %d\n", app_usbd_cdc_acm_bytes_stored(p_cdc_acm));
                 do
                 {
+                    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Bytes waiting: %d\n", app_usbd_cdc_acm_bytes_stored(p_cdc_acm));
                     /*Get amount of data transfered*/
-                    size_t size = app_usbd_cdc_acm_rx_size(p_cdc_acm);
-                   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "RX: size: %u char: %c\n", size, m_cdc_rx_buffer[0]);
 
-                   if(m_cdc_rx_buffer[0] >= '0' && m_cdc_rx_buffer[0] <= '9')
-                   {
-                      sum += sum * 10 + m_cdc_rx_buffer[0] - '0';
-                   }
-                   else
-                   {
-                      sum = 0;
-                   }
+                    if(m_cdc_rx_buffer[rx_buffer_index] == '\r' ||
+                       m_cdc_rx_buffer[rx_buffer_index] == '\n')
+                    {
+                        m_cdc_rx_buffer[rx_buffer_index] = '\0';
 
-                
-                    size = sprintf(m_cdc_tx_buffer, "%c\n\r", m_cdc_rx_buffer[0]);
-                    app_usbd_cdc_acm_write(p_cdc_acm,  m_cdc_tx_buffer, size);
+                        ems_set_params_t set_params;
+                        model_transition_t transition_params;
 
-                    /* Fetch data until internal buffer is empty */
+                        sscanf(m_cdc_rx_buffer, "%hu %d", &set_params.command, &set_params.data);
+                        set_params.tid = tid++;
+                        transition_params.delay_ms = 0;
+                        transition_params.transition_time_ms = 0;
+
+                        ems_client_set(&m_clients[0], &set_params, &transition_params);
+
+                        //size_t tx_size = sprintf(m_cdc_tx_buffer, "tx : %s %hu %d\r\n", m_cdc_rx_buffer, set_params.command, set_params.data);
+                        //app_usbd_cdc_acm_write(p_cdc_acm,  m_cdc_tx_buffer, tx_size);
+                        rx_buffer_index = 0;
+                    }
+                    else
+                    {
+                        rx_buffer_index += READ_SIZE;
+                        if(rx_buffer_index >= CDC_ACM_BUFFER_SIZE)
+                        {
+                            rx_buffer_index = 0;
+                        }
+                    }
+
                     ret = app_usbd_cdc_acm_read(&m_app_cdc_acm,
-                                                m_cdc_rx_buffer,
+                                                &m_cdc_rx_buffer[rx_buffer_index],
                                                 READ_SIZE);
                 } while (ret == NRF_SUCCESS);
-
-                app_usbd_cdc_acm_write(p_cdc_acm,  m_cdc_tx_buffer, sprintf(m_cdc_tx_buffer, "%d\n\r", sum + 1));
-                button_event_handler(sum);
             }
             break;
         default:
@@ -520,7 +432,7 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 
 static void start(void)
 {
-    rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
+//    rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
 
     if (!m_device_provisioned)
     {
@@ -557,7 +469,6 @@ static void power_manage(void)
 static void idle_state_handle(void)
 {
     power_manage();
-
 }
 
 int main(void)
@@ -568,6 +479,5 @@ int main(void)
     for (;;)
     {
         idle_state_handle();
-
     }
 }
