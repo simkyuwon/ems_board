@@ -198,15 +198,20 @@
       <file file_name="../../../external/app_timer/app_timer_workaround.c" />
     </folder>
     <folder Name="Model">
-      <file file_name="../server/include/app_ems_pwm.c" />
-      <file file_name="../server/include/ems_pwm_client.c" />
       <file file_name="../server/include/ems_common.h" />
       <file file_name="../server/include/ems_messages.h" />
-      <file file_name="../server/include/ems_pwm_client.h" />
+      <file file_name="../server/include/app_ems_board.c" />
+      <file file_name="../server/include/ems_client.c" />
     </folder>
+    <configuration
+      Name="Debug"
+      arm_target_interface_type="SWD"
+      supplyPower="No"
+      target_loader_erase_all="Default" />
   </project>
   <configuration
     Name="Debug"
+    arm_target_interface_type="SWD"
     arm_use_builtins="Yes"
     build_intermediate_directory="build/$(ProjectName)_$(Configuration)/obj"
     build_output_directory="build/$(ProjectName)_$(Configuration)"

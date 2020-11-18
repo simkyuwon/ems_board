@@ -23,11 +23,13 @@
  <Project>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1"/>
+  <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Access"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Application"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Mesh stack"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Model"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;nRF5 SDK"/>
   <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Other"/>
+  <ProjectSessionItem path="ems_dongle_client_nrf52840_xxAA_s140_7.0.1;ems_dongle_client_nrf52840_xxAA_s140_7.0.1;Provisioning"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ems_dongle_client_nrf52840_xxAA_s140_7.0.1" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -60,10 +62,11 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="601" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="582" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="897" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src/main.c" useBinaryEdit="0" left="0" path="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/components/libraries/usbd/app_usbd.c" selected="0" top="886" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="187" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/components/libraries/usbd/app_usbd.c" useBinaryEdit="0" left="0" path="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/integration/nrfx/legacy/nrf_drv_usbd.h" selected="0" top="167" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1780" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/integration/nrfx/legacy/nrf_drv_usbd.h" useBinaryEdit="0" left="0" path="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/modules/nrfx/drivers/src/nrfx_usbd.c" selected="0" top="1755" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="52" y="471" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="95" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="154" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src/main.c" useBinaryEdit="0" left="0" path="../server/include/ems_client.c" selected="0" top="140" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="46" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/ems_client.c" useBinaryEdit="0" left="0" path="../server/include/ems_client.h" selected="0" top="33" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="10" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src/main.c" useBinaryEdit="0" left="0" path="../server/include/ems_messages.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="14" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/ems_client.c" useBinaryEdit="0" left="0" path="../server/include/ems_common.h" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_dongle_client_nrf52840_xxAA_s140_7.0.1" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/components/libraries/scheduler" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ems_dongle_client_nrf52840_xxAA_s140_7.0.1" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

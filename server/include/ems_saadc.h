@@ -8,7 +8,7 @@
 #include "log.h"
 
 #define SAADC_CHANNEL_COUNT (3)
-#define SAMPLES_IN_BUFFER (1)
+#define SAMPLES_IN_BUFFER (128)
 
 #define SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) \
     {                                                                            \
@@ -17,7 +17,7 @@
         .reference    = reference_in,                                            \
         .acq_time     = acq_time_in,                                             \
         .pin_p        = pin_in                                                   \
-    }                                                                            \
+    }
 
 #define VOLTAGE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in)
 
@@ -32,10 +32,10 @@
         .acq_time     = acq_time_in,                                                                                        \
         .pin_p        = pin_p_in,                                                                                           \
         .pin_n        = pin_n_in                                                                                            \
-    }                                                                                                                       \ 
-       
-#define MIN_TEMPERATURE 0
-#define MAX_TEMPERATURE 150
+    }
+
+#define MIN_TEMPERATURE   (0)
+#define MAX_TEMPERATURE   (150)
 
 typedef struct
 {
@@ -48,10 +48,9 @@ typedef struct
     nrf_saadc_input_t     pin_n;
 } saadc_config_t;
 
-static volatile SAADC_CH_Type* nrf_saadc_base(const uint32_t saadc_ch_number);
+static volatile SAADC_CH_Type* nrf_saadc_channel_base(const uint32_t saadc_ch_number);
 
-bool nrf_saadc_init(const uint16_t * p_saadc_result,
-                    const uint16_t buffer_size);
+void nrf_saadc_init(void);
 
 bool voltage_saadc_init(const uint32_t saadc_ch_number,
                         const saadc_config_t * const p_config);
@@ -61,10 +60,8 @@ bool temperature_saadc_init(const uint32_t sensor_saadc_ch_number,
                             const uint32_t vss_saadc_ch_number,
                             const saadc_config_t * const p_vss_config);
 
-void saadc_buffer_update(void);
-
-int search_res_table_index(const int min_index, const int max_index, const double resistance);
-
 double pt100_res2them(const double resistance);
+
+double themperature_get(void);
 
 #endif

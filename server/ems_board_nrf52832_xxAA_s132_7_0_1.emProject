@@ -40,8 +40,12 @@
       <file file_name="../../common/src/app_error_weak.c" />
       <file file_name="../../common/src/assertion_handler_weak.c" />
       <file file_name="include/sdk_config.h" />
-      <file file_name="include/app_ems_pwm.c" />
-      <file file_name="include/app_ems_pwm.h" />
+      <file file_name="include/ems_pwm.c" />
+      <file file_name="include/ems_saadc.c" />
+      <file file_name="include/ems_gpio.c" />
+      <file file_name="include/ems_board.h" />
+      <file file_name="include/ems_gpiote.c" />
+      <file file_name="include/app_ems_board.c" />
     </folder>
     <folder Name="Core">
       <file file_name="../../../mesh/core/src/internal_event.c" />
@@ -163,7 +167,7 @@
       <file file_name="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/modules/nrfx/drivers/src/nrfx_ppi.c" />
       <file file_name="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/integration/nrfx/legacy/nrf_drv_ppi.c" />
       <file file_name="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/components/softdevice/s132/headers/nrf_nvic.h" />
-      <file file_name="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/modules/nrfx/drivers/src/nrfx_adc.c" />
+      <file file_name="../../../../nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/modules/nrfx/drivers/src/nrfx_saadc.c" />
     </folder>
     <folder Name="Provisioning">
       <file file_name="../../../mesh/prov/src/prov_provisionee.c" />
@@ -193,11 +197,8 @@
     </folder>
     <folder Name="Model">
       <file file_name="include/ems_server.c" />
-      <file file_name="include/ems_server.h" />
-      <file file_name="include/ems_pwm_client.c" />
       <file file_name="include/ems_common.h" />
       <file file_name="include/ems_messages.h" />
-      <file file_name="include/ems_pwm_client.h" />
     </folder>
     <folder Name="Generic Level Model">
       <file file_name="../../../models/model_spec/generic_level/src/generic_level_server.c" />

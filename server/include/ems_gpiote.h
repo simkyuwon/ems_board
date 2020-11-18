@@ -11,7 +11,7 @@
         .mode = GPIOTE_CONFIG_MODE_Event,          \
         .psel = pin_in,                            \
         .polarity = polarity_in                    \
-    }                                              \
+    }
 
 #define PULSE_GPIOTE_CONFIG(pin_in, polarity_in, outinit_in)  \
     {                                                         \
@@ -19,7 +19,7 @@
         .psel = pin_in,                                       \
         .polarity = polarity_in,                              \
         .outinit = outinit_in                                 \
-    }                                                         \
+    }
 
 typedef struct
 {
@@ -29,7 +29,6 @@ typedef struct
     uint8_t     outinit;
 }gpiote_config_t;
 
-//typedef bool (*button_cb)(const pwm_sequence_config_t * const p_config);
 typedef void (*button_cb)(void);
 
 typedef struct

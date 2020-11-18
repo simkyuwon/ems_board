@@ -57,12 +57,12 @@ bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * 
     p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);                                                        //LOOP(SEQ[0] -> SEQ[1]) -> ppi -> (SEQ[0] ...
 
     p_nrf_pwm->SEQ[0].PTR = ((uint32_t)(pwm_seq0[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
-    p_nrf_pwm->SEQ[0].CNT = ((sizeof(pwm_seq0[pwm_number])/sizeof(uint16_t)) << PWM_SEQ_CNT_CNT_Pos);
+    p_nrf_pwm->SEQ[0].CNT = (ARRAY_SIZE(pwm_seq0[pwm_number]) << PWM_SEQ_CNT_CNT_Pos);
     p_nrf_pwm->SEQ[0].REFRESH = ((p_config->pulse_count - 1) << PWM_SEQ_REFRESH_CNT_Pos);             //pwm period count = REFRESH.CNT + 1 
     p_nrf_pwm->SEQ[0].ENDDELAY = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
  
     p_nrf_pwm->SEQ[1].PTR = ((uint32_t)(pwm_seq1[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
-    p_nrf_pwm->SEQ[1].CNT = ((sizeof(pwm_seq1[pwm_number])/sizeof(uint16_t)) << PWM_SEQ_CNT_CNT_Pos);
+    p_nrf_pwm->SEQ[1].CNT = (ARRAY_SIZE(pwm_seq1[pwm_number]) << PWM_SEQ_CNT_CNT_Pos);
     //wating part count = (pwm period count = pwm period / pwm 1 pulse width) - output part count
     p_nrf_pwm->SEQ[1].REFRESH = (((p_config->pulse_period_us / p_config->pulse_width_us) - (p_nrf_pwm->SEQ[0].REFRESH + 1) - 1) << PWM_SEQ_REFRESH_CNT_Pos);
     p_nrf_pwm->SEQ[1].ENDDELAY = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
@@ -243,7 +243,7 @@ bool voltage_level_down(pwm_sequence_config_t * const p_config)
 
 bool voltage_level_set(pwm_sequence_config_t * const p_config, const uint8_t level)
 {
-    if(voltage_level < VOLTAGE_LEVEL_MIN || voltage_level > VOLTAGE_LEVEL_MAX)
+    if(level < VOLTAGE_LEVEL_MIN || level > VOLTAGE_LEVEL_MAX)
     {
         return false;
     }

@@ -83,6 +83,7 @@
 #include "app_usbd_serial_num.h"
 
 #include "app_scheduler.h"
+
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
@@ -155,6 +156,7 @@ static void app_ems_client_status_cb(const ems_client_t *p_self,
                                      const access_message_rx_meta_t *p_meta,
                                      const ems_status_params_t *p_in)
 {
+   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "position : %x, Acknowledged address : %x\n", p_in->board_position, p_meta->src.value);
 }
 
 static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self)
@@ -276,7 +278,6 @@ static void initialize(void)
     };
 
     __LOG_INIT(LOG_SRC_APP | LOG_SRC_ACCESS | LOG_SRC_BEARER, LOG_LEVEL_INFO, LOG_CALLBACK_DEFAULT);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- BLE Mesh Light Switch Client Demo -----\n");
 
     ERROR_CHECK(app_timer_init());
 
@@ -318,16 +319,30 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
             /*Set up the first transfer*/
             rx_buffer_index = 0;
 
-            ret = app_usbd_cdc_acm_read(&m_app_cdc_acm,
-                                         m_cdc_rx_buffer,
-                                         READ_SIZE);
-            UNUSED_VARIABLE(ret);
+            app_usbd_cdc_acm_read(&m_app_cdc_acm,
+                                  m_cdc_rx_buffer,
+                                  READ_SIZE);
+
            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "CDC ACM port opened\n");
+
+            ems_set_params_t set_params;
+            set_params.message_type = NOTICE_PORT_OPEN;
+
+            set_params.tid = tid++;
+            ems_client_set(&m_clients[0], &set_params);
+
             break;
         }
 
         case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
             __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "CDC ACM port closed\n");
+            
+            ems_set_params_t set_params;
+            set_params.message_type = NOTICE_PORT_CLOSE;
+
+            set_params.tid = tid++;
+            ems_client_set(&m_clients[0], &set_params);
+
             if (m_usb_connected)
             {
             }
@@ -340,26 +355,25 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
             {
                 do
                 {
-                    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Bytes waiting: %d\n", app_usbd_cdc_acm_bytes_stored(p_cdc_acm));
-                    /*Get amount of data transfered*/
+                    app_usbd_cdc_acm_write(p_cdc_acm,  &m_cdc_rx_buffer[rx_buffer_index], READ_SIZE);
 
-                    if(m_cdc_rx_buffer[rx_buffer_index] == '\r' ||
+                    if(m_cdc_rx_buffer[rx_buffer_index] == '\0' ||
+                       m_cdc_rx_buffer[rx_buffer_index] == '\r' ||
                        m_cdc_rx_buffer[rx_buffer_index] == '\n')
                     {
                         m_cdc_rx_buffer[rx_buffer_index] = '\0';
 
-                        ems_set_params_t set_params;
-                        model_transition_t transition_params;
+                        ems_set_params_t set_params = {0};
 
-                        sscanf(m_cdc_rx_buffer, "%hu %d", &set_params.command, &set_params.data);
+                        sscanf(m_cdc_rx_buffer, "%d", &set_params.message_type);
+                        if(!NOTICE_MESSAGE(set_params.message_type))
+                        {
+                            sscanf(m_cdc_rx_buffer, "%*d %hhu %d", &set_params.position, &set_params.data); 
+                        }
+
                         set_params.tid = tid++;
-                        transition_params.delay_ms = 0;
-                        transition_params.transition_time_ms = 0;
+                        ems_client_set(&m_clients[0], &set_params);
 
-                        ems_client_set(&m_clients[0], &set_params, &transition_params);
-
-                        //size_t tx_size = sprintf(m_cdc_tx_buffer, "tx : %s %hu %d\r\n", m_cdc_rx_buffer, set_params.command, set_params.data);
-                        //app_usbd_cdc_acm_write(p_cdc_acm,  m_cdc_tx_buffer, tx_size);
                         rx_buffer_index = 0;
                     }
                     else
@@ -432,8 +446,6 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
 
 static void start(void)
 {
-//    rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
-
     if (!m_device_provisioned)
     {
         static const uint8_t static_auth_data[NRF_MESH_KEY_SIZE] = STATIC_AUTH_DATA;

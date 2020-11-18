@@ -48,7 +48,7 @@ bool button_event_init(uint32_t pin_number, button_cb callback)
     return true;
 }
 
-void GPIOTE_IRQHandler()
+void GPIOTE_IRQHandler(void)
 {
     for(uint32_t ch_num = 0; ch_num < GPIOTE_CH_NUM; ch_num++)
     {

@@ -20,20 +20,20 @@
         .pulse_period_us    = period_in_us,                                  \
         .pulse_width_us     = width_in_us,                                   \
         .pulse_count        = count_in                                       \
-    }                                                                        \
+    }
 
 #define VOLTAGE_PWM_CONFIG(pin_in, p_seq_in)  \
     {                                         \
         .pin                = pin_in,         \
         .p_seq              = p_seq_in        \
-    }                                         \
+    }
 
 #define PWM_SEQUENCE_CONFIG(p_origin_dma_in, period_ms_in)                \
     {                                                                     \
         .p_origin_dma       = p_origin_dma_in,                            \
         .count              = sizeof(p_origin_dma_in) / sizeof(uint16_t), \
         .period_ms          = period_ms_in                                \
-    }                                                                     \
+    }
 
 #define WAVEFORM0_PWM_NUMBER  (0)
 #define WAVEFORM1_PWM_NUMBER  (1)
@@ -89,8 +89,6 @@ typedef struct
 bool voltage_pwm_init(const uint32_t pwm_number, const voltage_pwm_config_t * const p_config);
 
 bool voltage_sequence_init(pwm_sequence_config_t * const p_config);
-
-static bool voltage_sequence_update(pwm_sequence_config_t * const p_config);
 
 bool voltage_sequence_mode_change(voltage_pwm_config_t * const p_config, pwm_sequence_config_t * const p_seq_config);
 

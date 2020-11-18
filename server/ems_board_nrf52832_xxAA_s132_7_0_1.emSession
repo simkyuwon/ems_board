@@ -1,7 +1,9 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+ </Breakpoints>
  <ExecutionProfileWindow/>
  <FrameBufferWindow>
   <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
@@ -23,11 +25,10 @@
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Access"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Application"/>
-  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Generic Level Model"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Mesh stack"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Model"/>
-  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;nRF5 SDK"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Other"/>
+  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Provisioning"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ems_board_nrf52832" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -48,7 +49,9 @@
   <Trace enabled="Yes"/>
  </TraceWindow>
  <Watch1>
-  <Watches active="1" update="Never"/>
+  <Watches active="1" update="Never">
+   <Watchpoint expression="NRF_PWM0" name="NRF_PWM0" radix="16" linenumber="369" filename="src/main.c"/>
+  </Watches>
  </Watch1>
  <Watch2>
   <Watches active="0" update="Never"/>
@@ -60,9 +63,7 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="13" y="300" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="275" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="23" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_server.h" selected="0" top="3" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="21" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/app_ems_pwm.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="11" y="127" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/app_ems_board.c" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="109" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nRF5SDK1702d674dde/nRF5_SDK_17.0.2_d674dde/modules/nrfx/drivers/src" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

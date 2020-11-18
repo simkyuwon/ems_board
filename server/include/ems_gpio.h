@@ -13,7 +13,7 @@
         .pull = pull_in,                          \
         .drive = GPIO_PIN_CNF_DRIVE_S0S1,         \
         .sense = GPIO_PIN_CNF_SENSE_Disabled      \
-    }                                             \
+    }
 
 #define BUTTON_GPIO_CONFIG(pin_num, pull_in)      \
     {                                             \
@@ -23,7 +23,7 @@
         .pull = pull_in,                          \
         .drive = GPIO_PIN_CNF_DRIVE_S0S1,         \
         .sense = GPIO_PIN_CNF_SENSE_Disabled      \
-    }                                             \
+    }
 
 #define PULSE_GPIO_CONFIG(pin_num)                \
     {                                             \
@@ -32,7 +32,17 @@
         .input = GPIO_PIN_CNF_INPUT_Disconnect,   \
         .pull = GPIO_PIN_CNF_PULL_Disabled,       \
         .sense = GPIO_PIN_CNF_SENSE_Disabled      \
-    }                                             \
+    }
+
+#define LED_GPIO_CONFIG(pin_num, pull_in)         \
+    {                                             \
+        .pin_number = pin_num,                    \
+        .dir = GPIO_PIN_CNF_DIR_Output,           \
+        .input = GPIO_PIN_CNF_INPUT_Disconnect,   \
+        .pull = pull_in,                          \
+        .drive = GPIO_PIN_CNF_DRIVE_S0S1,         \
+        .sense = GPIO_PIN_CNF_SENSE_Disabled      \
+    }
 
 typedef struct
 {
@@ -49,6 +59,8 @@ bool dip_switch_gpio_init(uint32_t pin_number);
 void read_dip_switch(uint32_t * const pin_input);
 
 bool pulse_generator_init(const uint32_t pin_number);
+
+bool gpio_pin_write(const uint32_t pin_number, bool state);
 
 bool gpio_pin_init(const gpio_config_t * const p_config);
 

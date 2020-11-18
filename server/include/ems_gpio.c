@@ -1,7 +1,7 @@
 #include "ems_gpio.h"
 
 static uint32_t gpio_pin_used = 0;
-static nrf_ppi_channel_t pulse_generator_ppi_channel;
+static nrf_ppi_channel_t pulse_generator_ppi_channel[2];
 
 bool dip_switch_gpio_init(uint32_t pin_number)
 {
@@ -54,16 +54,32 @@ bool pulse_generator_init(const uint32_t pin_number)
 
     PULSE_GENERATOR_TIMER->INTENSET = (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos) |
                                       (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
-    PULSE_GENERATOR_TIMER->CC[0] = 1;   //0 == OFF, 1 == ON
-    PULSE_GENERATOR_TIMER->CC[1] = 1;
-    PULSE_GENERATOR_TIMER->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled << TIMER_SHORTS_COMPARE1_CLEAR_Pos);
+    PULSE_GENERATOR_TIMER->CC[0] = 1;
+    PULSE_GENERATOR_TIMER->CC[1] = 10;
+    PULSE_GENERATOR_TIMER->CC[2] = 10;
+    PULSE_GENERATOR_TIMER->SHORTS = (TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos);
 
     //pulse pin toggle ppi
-    nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel);
-    nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel, (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[0]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
-    nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel);
+    nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel[0]);
+    nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel[0], (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[0]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
+    nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel[0]);
+    nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel[1]);
+    nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel[1], (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[1]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
+    nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel[1]);
 
     PULSE_GENERATOR_TIMER->TASKS_START = 1;
+
+    return true;
+}
+
+bool gpio_pin_write(const uint32_t pin_number, bool state)
+{
+    if(pin_number >= P0_PIN_NUM || !(gpio_pin_used & (1UL << pin_number)))
+    {
+        return false;
+    }
+
+    NRF_P0->OUT = state << pin_number;
 
     return true;
 }
