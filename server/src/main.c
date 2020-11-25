@@ -74,7 +74,6 @@
 #include "ems_saadc.h"
 #include "ems_gpio.h"
 #include "ems_board.h"
-#include "ems_timer.h"
 
 /*****************************************************************************
  * Definitions
@@ -124,7 +123,7 @@ static waveform_pwm_config_t m_waveform_pwm_config =  WAVEFORM_PWM_CONFIG(44000,
                                                                           PAD_RIGHT_PWM_PIN);   //pwm output pin
 static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                              //pwm output pin
                                                                               &m_pwm_sequence_config[PWM_SIN_SEQUENCE_NUMBER]); //pwm form
-static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
+static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
 
 APP_EMS_PWM_SERVER_DEF(m_ems_server,
                       APP_FORCE_SEGMENTATION,
@@ -135,7 +134,7 @@ APP_EMS_PWM_SERVER_DEF(m_ems_server,
 
 static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data)
 {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "SET)command : %x,  position : %u, data : %d\n", command,  position, data);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "SET)command : %x,  position : %u, data : %d\n", command, position, data);
     if(position & (1 << board.position))
     {
         if(board.control_mode == BUTTON_CONTROL)
@@ -166,6 +165,12 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
                     {
                         pad_voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[(uint32_t)data]);
                     }
+                    break;
+                case CMD_PELTIER_HEATING:
+                    peltier_heating(data);
+                    break;
+                case CMD_PELTIER_COOLING:
+                    peltier_cooling(data);
                     break;
             }
         }
@@ -413,9 +418,11 @@ int main(void)
     initialize();
     start();
 
+    peltier_heating(50);
+
+    peltier_cooling(30);
     for (;;)
     {
-        (void)themperature_get();
         (void)sd_app_evt_wait();
     }
 

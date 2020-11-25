@@ -288,8 +288,8 @@ bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * co
     }
 
     //pulse output part
-    pwm_seq0[pwm_number][0] = 0 | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq0[pwm_number][1] = 0 | PWM_POLARITY_ACTIVE_LOW;
+    pwm_seq0[pwm_number][0] = 0 | PWM_POLARITY_ACTIVE_HIGH;
+    pwm_seq0[pwm_number][1] = 0 | PWM_POLARITY_ACTIVE_HIGH;
     pwm_seq0[pwm_number][3] = p_config->period_us;
 
     p_nrf_pwm->MODE = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
@@ -312,7 +312,7 @@ bool peltier_heating(uint32_t duty)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PELTIER_PWM_NUMBER);
 
-    if(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk)
+    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
     {
         return false;
     }
@@ -337,7 +337,7 @@ bool peltier_cooling(uint32_t duty)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PELTIER_PWM_NUMBER);
 
-    if(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk)
+    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
     {
         return false;
     }
@@ -350,8 +350,8 @@ bool peltier_cooling(uint32_t duty)
     }
 
     uint32_t period_us = pwm_seq0[PELTIER_PWM_NUMBER][3];
-    pwm_seq0[PELTIER_PWM_NUMBER][0] = 0 | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq0[PELTIER_PWM_NUMBER][1] = (duty * period_us / 100) | PWM_POLARITY_ACTIVE_LOW;
+    pwm_seq0[PELTIER_PWM_NUMBER][0] = 0 | PWM_POLARITY_ACTIVE_HIGH;
+    pwm_seq0[PELTIER_PWM_NUMBER][1] = (duty * period_us / 100) | PWM_POLARITY_ACTIVE_HIGH;
     
     pwm_start(PELTIER_PWM_NUMBER);
 
