@@ -1,36 +1,37 @@
 #ifndef EMS_BOARD_H__
 #define EMS_BOARD_H__
 
-#define DIP_SWITCH_0 (6)
-#define DIP_SWITCH_1 (7)
-#define DIP_SWITCH_2 (8)
+#include <stdint.h>
 
-#define PULSE_GENERATOR_PIN (11)
+/* pin setting */
 
-#define PWM_0_L_PIN (17)
-#define PWM_0_R_PIN (18)
-#define PWM_1_L_PIN (19)
-#define PWM_1_R_PIN (21)
+#define DIP_SWITCH_0 (29)
+#define DIP_SWITCH_1 (30)
+#define DIP_SWITCH_2 (31)
 
-#define PWM_VOLTAGE_PIN (12)
+#define PELTIER_HEATING_PWM_PIN (6)
+#define PELTIER_COOLING_PWM_PIN (7)
+#define PAD_VOLTAGE_PWM_PIN     (17)
+#define PAD_RIGHT_PWM_PIN       (19)
+#define PAD_LEFT_PWM_PIN        (20)
 
-#define VOLTAGE_ANALOG_PIN          (NRF_SAADC_INPUT_AIN0)
-#define TEMPERATURE_ANALOG_P_PIN    (NRF_SAADC_INPUT_AIN1)
-#define TEMPERATURE_ANALOG_N_PIN    (NRF_SAADC_INPUT_AIN2)
-#define TEMPERATURE_ANALOG_VSS_PIN  (NRF_SAADC_INPUT_AIN3)
+#define TEMPERATURE_ANALOG_P_PIN    (NRF_SAADC_INPUT_AIN0)//P0.02
+#define TEMPERATURE_ANALOG_N_PIN    (NRF_SAADC_INPUT_AIN1)//P0.03
+#define TEMPERATURE_ANALOG_VIN_PIN  (NRF_SAADC_INPUT_AIN2)//P0.04
+#define PELTIER_VOLTAGE_ANALOG_PIN  (NRF_SAADC_INPUT_AIN3)//P0.05
+#define PAD_VOLTAGE_ANALOG_PIN      (NRF_SAADC_INPUT_AIN4)//P0.28
 
-#define BUTTON_1          (13)
-#define BUTTON_2          (14)
-#define BUTTON_3          (15)
-#define BUTTON_4          (16)
+#define POWER_CONTROL_PIN (13)
 
-#define VOLTAGE_SAADC_CHANNEL             (0)
-#define TEMPERATURE_SENSOR_SAADC_CHANNEL  (1)
-#define TEMPERATURE_VSS_SAADC_CHANNEL     (2)
+#define UP_BUTTON         (25)
+#define DOWN_BUTTON       (26)
+#define POWER_BUTTON      (11)
+#define MODE_BUTTON       (POWER_BUTTON)
 
-#define BOARD_LED_0   (20)
+#define BLUE_LED          (23)
+#define WHITE_LED         (24)
 
-#define PULSE_GENERATOR_TIMER (NRF_TIMER4)
+/* */
 
 #define BUTTON_CONTROL  (0)
 #define BLE_CONTROL     (1)
@@ -38,7 +39,13 @@
 typedef struct
 {
     uint8_t   control_mode;
-    uint8_t  position;
+    uint8_t   position;
 }board_state;
+
+void button_control_mode(board_state * p_board);
+void ble_control_mode(board_state * p_board);
+
+void board_turn_off(void);
+
 
 #endif

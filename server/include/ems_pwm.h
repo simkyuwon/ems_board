@@ -12,7 +12,8 @@
 
 #define PWM_NOPIN         (0xFFFFFFFF)
 
-#define WAVEFORM_PWM_CHANNELS_PER_INSTANCE (2)
+#define WAVEFORM_PWM_CHANNELS_PER_INSTANCE  (2)
+#define PELTIER_PWM_CHANNELS_PER_INSTANCE   (2)
 
 #define WAVEFORM_PWM_CONFIG(period_in_us, width_in_us, count_in, pin0, pin1) \
     {                                                                        \
@@ -22,10 +23,10 @@
         .pulse_count        = count_in                                       \
     }
 
-#define VOLTAGE_PWM_CONFIG(pin_in, p_seq_in)  \
-    {                                         \
-        .pin                = pin_in,         \
-        .p_seq              = p_seq_in        \
+#define PAD_VOLTAGE_PWM_CONFIG(pin_in, p_seq_in)  \
+    {                                             \
+        .pin                = pin_in,             \
+        .p_seq              = p_seq_in            \
     }
 
 #define PWM_SEQUENCE_CONFIG(p_origin_dma_in, period_ms_in)                \
@@ -35,20 +36,26 @@
         .period_ms          = period_ms_in                                \
     }
 
-#define WAVEFORM0_PWM_NUMBER  (0)
-#define WAVEFORM1_PWM_NUMBER  (1)
-#define VOLTAGE_PWM_NUMBER    (2)
+#define PELTIER_PWM_CONFIG(period_in_us, heating_pin, cooling_pin)  \
+    {                                                               \
+        .pins               = {heating_pin, cooling_pin},           \
+        .period_us          = period_in_us,                         \
+    }
 
-#define PWM_POLARITY_Msk  (0x8000UL)
-#define PWM_COMPARE_Msk   (0x7FFFUL)
+#define WAVEFORM_PWM_NUMBER     (0)
+#define PAD_VOLTAGE_PWM_NUMBER  (1)
+#define PELTIER_PWM_NUMBER      (2)
 
-#define PWM_PIN_NOT_CONNECTED (0x1FUL)
+#define PWM_POLARITY_Msk        (0x8000UL)
+#define PWM_COMPARE_Msk         (0x7FFFUL)
 
-#define VOLTAGE_COUNTER_TOP (1000)
-#define VOLTAGE_PERIOD_KHZ (8)
+#define PWM_PIN_NOT_CONNECTED   (0x1FUL)
 
-#define VOLTAGE_LEVEL_MAX (10)
-#define VOLTAGE_LEVEL_MIN (0)
+#define PAD_VOLTAGE_COUNTER_TOP (1000)
+#define PAD_VOLTAGE_PERIOD_KHZ  (8)
+
+#define PAD_VOLTAGE_LEVEL_MAX   (10)
+#define PAD_VOLTAGE_LEVEL_MIN   (0)
 
 typedef enum
 {
@@ -72,7 +79,20 @@ typedef struct
     uint32_t        pulse_count;
 }waveform_pwm_config_t;
 
+typedef struct
+{
+    uint32_t                    pin;
+    pwm_sequence_config_t *     p_seq;
+}pad_voltage_pwm_config_t;
+
+typedef struct
+{
+    uint32_t      pins[PELTIER_PWM_CHANNELS_PER_INSTANCE];
+    uint32_t      period_us;
+}peltier_pwm_config_t;
+
 static NRF_PWM_Type* nrf_pwm_base(const uint32_t pwm_number);
+
 
 bool waveform_pwm_init(const uint32_t pwm_number, const waveform_pwm_config_t * const p_config);
 
@@ -80,25 +100,30 @@ bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_
 
 bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us);
 
-typedef struct
-{
-    uint32_t                    pin;
-    pwm_sequence_config_t *     p_seq;
-}voltage_pwm_config_t;
 
-bool voltage_pwm_init(const uint32_t pwm_number, const voltage_pwm_config_t * const p_config);
+bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_config_t * const p_config);
 
-bool voltage_sequence_init(pwm_sequence_config_t * const p_config);
+bool pad_voltage_sequence_init(pwm_sequence_config_t * const p_config);
 
-bool voltage_sequence_mode_change(voltage_pwm_config_t * const p_config, pwm_sequence_config_t * const p_seq_config);
+bool pad_voltage_sequence_mode_change(pad_voltage_pwm_config_t * const p_config, pwm_sequence_config_t * const p_seq_config);
 
-bool voltage_level_up(pwm_sequence_config_t * const p_config);
+bool pad_voltage_level_up(pwm_sequence_config_t * const p_config);
 
-bool voltage_level_down(pwm_sequence_config_t * const p_config);
+bool pad_voltage_level_down(pwm_sequence_config_t * const p_config);
 
-bool voltage_level_set(pwm_sequence_config_t * const p_config, const uint8_t level);
+bool pad_voltage_level_set(pwm_sequence_config_t * const p_config, const uint8_t level);
 
-bool voltage_period_set(voltage_pwm_config_t * const p_config, const uint32_t period_ms);
+bool pad_voltage_period_set(pad_voltage_pwm_config_t * const p_config, const uint32_t period_ms);
+
+
+bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * const p_config);
+
+bool peltier_heating(uint32_t duty);
+
+bool peltier_cooling(uint32_t duty);
+
+bool peltier_stop(void);
+
 
 bool pwm_single_shot(const uint32_t pwm_number);
 

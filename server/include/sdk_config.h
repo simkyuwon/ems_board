@@ -6580,7 +6580,7 @@
 
 
 #ifndef TIMER1_ENABLED
-#define TIMER1_ENABLED 1
+#define TIMER1_ENABLED 0
 #endif
 
 // <q> TIMER2_ENABLED  - Enable TIMER2 instance

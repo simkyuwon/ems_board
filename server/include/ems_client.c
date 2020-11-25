@@ -34,15 +34,15 @@ static uint8_t message_set_packet_create(ems_set_msg_pkt_t * p_set,
 {
     p_set->tid = p_params->tid;
     p_set->message_type = p_params->message_type;
-    if(!NOTICE_MESSAGE(p_set->message_type))
+    if(NOTICE_MESSAGE(p_set->message_type))
+    {
+        return EMS_SET_NOTICE_MESSAGE_LEN;
+    }
+    else
     {
         p_set->position = p_params->position;
         p_set->data = p_params->data;
         return EMS_SET_COMMAND_MESSAGE_LEN;
-    }
-    else
-    {
-        return EMS_SET_NOTICE_MESSAGE_LEN;
     }
 }
 
@@ -73,12 +73,12 @@ static void reliable_context_create(ems_client_t * p_client,
 }
 
 uint32_t ems_client_init(ems_client_t * p_client,
-                             uint8_t element_index)
+                         uint8_t element_index)
 {
     if(p_client == NULL ||
-         p_client->settings.p_callbacks == NULL ||
-         p_client->settings.p_callbacks->ems_status_cb == NULL ||
-         p_client->settings.p_callbacks->periodic_publish_cb == NULL)
+       p_client->settings.p_callbacks == NULL ||
+       p_client->settings.p_callbacks->ems_status_cb == NULL ||
+       p_client->settings.p_callbacks->periodic_publish_cb == NULL)
     {
          return NRF_ERROR_NULL;
     }
@@ -90,7 +90,7 @@ uint32_t ems_client_init(ems_client_t * p_client,
 
     access_model_add_params_t add_params =
     {
-        .model_id = ACCESS_MODEL_SIG(EMS_PWM_CLIENT_MODEL_ID),
+        .model_id = ACCESS_MODEL_SIG(EMS_CLIENT_MODEL_ID),
         .element_index = element_index,
         .p_opcode_handlers = &m_opcode_handlers[0],
         .opcode_count = ARRAY_SIZE(m_opcode_handlers),

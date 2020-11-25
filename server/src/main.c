@@ -74,6 +74,7 @@
 #include "ems_saadc.h"
 #include "ems_gpio.h"
 #include "ems_board.h"
+#include "ems_timer.h"
 
 /*****************************************************************************
  * Definitions
@@ -89,7 +90,7 @@
 #define PWM_SIN_SEQUENCE_NUMBER     (1)
 #define PWM_TEST_SEQUENCE_NUMBER    (2)
 
-static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(1);
+//static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(1);
 
 /*****************************************************************************
  * Forward declaration of static functions
@@ -116,14 +117,14 @@ static pwm_sequence_config_t m_pwm_sequence_config[] = { m_normal_pwm_sequence_c
                                                          m_sin_pwm_sequence_config,
                                                          m_test_pwm_sequence_config};
 
-static waveform_pwm_config_t m_waveform0_pwm_config =  WAVEFORM_PWM_CONFIG(44000,         //waveform period(us)
-                                                                           400,           //waveform width(us)
-                                                                           3,             //waveform output count
-                                                                           PWM_0_L_PIN,   //pwm output pin
-                                                                           PWM_0_R_PIN);  //pwm output pin
-static waveform_pwm_config_t m_waveform1_pwm_config =  WAVEFORM_PWM_CONFIG(44000, 400, 3, PWM_1_L_PIN, PWM_1_R_PIN);
-static voltage_pwm_config_t m_voltage_pwm_config = VOLTAGE_PWM_CONFIG(PWM_VOLTAGE_PIN,                              //pwm output pin
-                                                                      &m_pwm_sequence_config[PWM_SIN_SEQUENCE_NUMBER]); //pwm form
+static waveform_pwm_config_t m_waveform_pwm_config =  WAVEFORM_PWM_CONFIG(44000,                //waveform period(us)
+                                                                          400,                  //waveform width(us)
+                                                                          3,                    //waveform output count
+                                                                          PAD_LEFT_PWM_PIN,     //pwm output pin
+                                                                          PAD_RIGHT_PWM_PIN);   //pwm output pin
+static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                              //pwm output pin
+                                                                              &m_pwm_sequence_config[PWM_SIN_SEQUENCE_NUMBER]); //pwm form
+static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
 
 APP_EMS_PWM_SERVER_DEF(m_ems_server,
                       APP_FORCE_SEGMENTATION,
@@ -141,7 +142,7 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
         {
             if(command == CMD_CONTROL_BLE)
             {
-                board.control_mode = BLE_CONTROL;
+                ble_control_mode(&board);
             }
         }
         else if(board.control_mode == BLE_CONTROL)
@@ -149,21 +150,21 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
             switch(command)
             {
                 case CMD_CONTROL_BUTTON:
-                    board.control_mode = BUTTON_CONTROL;
+                    button_control_mode(&board);
                     break;
                 case CMD_CONTROL_BLE:
-                    board.control_mode = BLE_CONTROL;
+                    ble_control_mode(&board);
                     break;
                 case CMD_VOLTAGE_PERIOD_SET:
-                    voltage_period_set(&m_voltage_pwm_config, (uint32_t)data);
+                    pad_voltage_period_set(&m_voltage_pwm_config, (uint32_t)data);
                     break;
                 case CMD_VOLTAGE_LEVEL_SET:
-                    voltage_level_set(m_voltage_pwm_config.p_seq, (uint8_t)data);
+                    pad_voltage_level_set(m_voltage_pwm_config.p_seq, (uint8_t)data);
                     break;
                 case CMD_VOLTAGE_SEQUENCE_CHANGE:
                     if((uint32_t)data < ARRAY_SIZE(m_pwm_sequence_config))
                     {
-                        voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[(uint32_t)data]);
+                        pad_voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[(uint32_t)data]);
                     }
                     break;
             }
@@ -171,7 +172,8 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
     }
 }
 
-static void app_ems_server_get_cb(const app_ems_server_t * p_server, uint8_t * p_position){
+static void app_ems_server_get_cb(const app_ems_server_t * p_server, uint8_t * p_position)
+{
     *p_position = board.position;
 }
 
@@ -255,7 +257,8 @@ static void mesh_init(void)
     }
 }
 
-static void ble_mesh_init(void){
+static void ble_mesh_init(void)
+{
     ERROR_CHECK(app_timer_init());
 
     ble_stack_init();
@@ -270,40 +273,40 @@ static void ble_mesh_init(void){
 
 static void saadc_init(void)
 {
-    saadc_config_t m_voltage_saadc_config = VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
-                                                                 NRF_SAADC_GAIN1_6,             //gain 1/6
-                                                                 NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
-                                                                 NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
-                                                                 VOLTAGE_ANALOG_PIN);           //analog input(P) pin
+    saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
+                                                                         NRF_SAADC_GAIN1_6,             //gain 1/6
+                                                                         NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
+                                                                         NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                         PAD_VOLTAGE_ANALOG_PIN);       //analog input(P) pin
+
+    saadc_config_t m_peltier_voltage_saadc_config = PELTIER_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
+                                                                                 NRF_SAADC_GAIN1_6,             //gain 1/6
+                                                                                 NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
+                                                                                 NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                 PELTIER_VOLTAGE_ANALOG_PIN);   //analog input(P) pin
 
     saadc_config_t m_temperature_sensor_saadc_config = TEMPERATURE_DIFF_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //V(P) resistor bypass
-                                                                                   NRF_SAADC_RESISTOR_DISABLED,   //V(N) resistor bypass
-                                                                                   NRF_SAADC_GAIN4,               //gain 4
-                                                                                   NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V)
-                                                                                   NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
-                                                                                   TEMPERATURE_ANALOG_P_PIN,      //analog input(P) pin
-                                                                                   TEMPERATURE_ANALOG_N_PIN);     //analog input(N) pin
+                                                                                     NRF_SAADC_RESISTOR_DISABLED,   //V(N) resistor bypass
+                                                                                     NRF_SAADC_GAIN4,               //gain 4
+                                                                                     NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V)
+                                                                                     NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                     TEMPERATURE_ANALOG_P_PIN,      //analog input(P) pin
+                                                                                     TEMPERATURE_ANALOG_N_PIN);     //analog input(N) pin
 
-    saadc_config_t m_temperatur_vss_saadc_config = TEMPERATURE_VSS_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,    //V(P) resistor bypass
-                                                                                NRF_SAADC_GAIN1,                //gain 1
-                                                                                NRF_SAADC_REFERENCE_INTERNAL,   //refernece internal(0.6V)
-                                                                                NRF_SAADC_ACQTIME_3US,          //acquisition time 3us, maximum source resistance 10kOhm
-                                                                                TEMPERATURE_ANALOG_VSS_PIN);    //analog input(P) pin
+    saadc_config_t m_temperature_vin_saadc_config = TEMPERATURE_VIN_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,    //V(P) resistor bypass
+                                                                                 NRF_SAADC_GAIN1,                //gain 1
+                                                                                 NRF_SAADC_REFERENCE_INTERNAL,   //refernece internal(0.6V)
+                                                                                 NRF_SAADC_ACQTIME_3US,          //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                 TEMPERATURE_ANALOG_VIN_PIN);    //analog input(P) pin
+
+    (void)voltage_saadc_init(&m_pad_voltage_saadc_config.channel_num, &m_pad_voltage_saadc_config);
+    (void)voltage_saadc_init(&m_peltier_voltage_saadc_config.channel_num, &m_peltier_voltage_saadc_config);
+    (void)temperature_saadc_init(&m_temperature_sensor_saadc_config.channel_num,
+                                 &m_temperature_sensor_saadc_config,
+                                 &m_temperature_vin_saadc_config.channel_num,
+                                 &m_temperature_vin_saadc_config);
 
     nrf_saadc_init();
-
-    if(!voltage_saadc_init(VOLTAGE_SAADC_CHANNEL, &m_voltage_saadc_config))
-    {
-          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "voltage saadc init failed\n");
-    }
-
-    if(!temperature_saadc_init(TEMPERATURE_SENSOR_SAADC_CHANNEL,
-                               &m_temperature_sensor_saadc_config,
-                               TEMPERATURE_VSS_SAADC_CHANNEL,
-                               &m_temperatur_vss_saadc_config))
-    {
-          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "temperature saadc init failed\n");
-    }
 }
 
 static void pwm_init(void)
@@ -311,50 +314,45 @@ static void pwm_init(void)
     pwm_sequence_config_t * p_end = m_pwm_sequence_config + ARRAY_SIZE(m_pwm_sequence_config);
     for(pwm_sequence_config_t * p_config = m_pwm_sequence_config; p_config < p_end; p_config++)
     {
-        voltage_sequence_init(p_config);
+        pad_voltage_sequence_init(p_config);
     }
 
-    waveform_pwm_init(WAVEFORM0_PWM_NUMBER, &m_waveform0_pwm_config);
-    waveform_pwm_init(WAVEFORM1_PWM_NUMBER, &m_waveform1_pwm_config);
-    voltage_pwm_init(VOLTAGE_PWM_NUMBER, &m_voltage_pwm_config);
+    waveform_pwm_init(WAVEFORM_PWM_NUMBER, &m_waveform_pwm_config);
+    pad_voltage_pwm_init(PAD_VOLTAGE_PWM_NUMBER, &m_voltage_pwm_config);
+    peltier_pwm_init(PELTIER_PWM_NUMBER, &m_peltier_pwm_config);
 }
 
-static void button1_callback(void)
+static void up_button_callback(void)
 {
-    voltage_level_up(m_voltage_pwm_config.p_seq);
 }
 
-static void button2_callback(void)
+static void down_button_callback(void)
 {
-    voltage_level_down(m_voltage_pwm_config.p_seq);
 }
 
-static void button3_callback(void)
+static void mode_button_callback(void)
 {    
-    gpio_pin_write(BOARD_LED_0, true);
-}
-
-static void button4_callback(void)
-{    
-    gpio_pin_write(BOARD_LED_0, false);
 }
 
 static void gpio_init(void)
 {
-    pulse_generator_init(PULSE_GENERATOR_PIN);
-
-    button_event_init(BUTTON_1,             //gpiote pin
-                      button1_callback);    //event callback function
-    button_event_init(BUTTON_2, button2_callback);
-    button_event_init(BUTTON_3, button3_callback);
-    button_event_init(BUTTON_4, button4_callback);
+    button_event_init(UP_BUTTON,            //gpiote pin
+                      up_button_callback);  //event callback function
+    button_event_init(DOWN_BUTTON, down_button_callback);
+    button_event_init(MODE_BUTTON, mode_button_callback);
 
     dip_switch_gpio_init(DIP_SWITCH_0);
     dip_switch_gpio_init(DIP_SWITCH_1);
     dip_switch_gpio_init(DIP_SWITCH_2);
 
-    gpio_config_t led0 = LED_GPIO_CONFIG(BOARD_LED_0, GPIO_PIN_CNF_PULL_Pullup);
-    gpio_pin_init(&led0);
+    gpio_config_t white_led = LED_GPIO_CONFIG(WHITE_LED, GPIO_PIN_CNF_PULL_Pullup);
+    gpio_config_t blue_led = LED_GPIO_CONFIG(BLUE_LED, GPIO_PIN_CNF_PULL_Pullup);
+    gpio_pin_init(&white_led);
+    gpio_pin_init(&blue_led);
+
+    gpio_config_t power_control = BOARD_POWER_GPIO_CONFIG(POWER_CONTROL_PIN);
+    gpio_pin_init(&power_control);
+    gpio_pin_write(POWER_CONTROL_PIN, GPIO_HIGH);
 }
 
 static void initialize(void)
@@ -363,6 +361,7 @@ static void initialize(void)
     nrf_drv_gpiote_init();
 
     __LOG_INIT(LOG_SRC_APP | LOG_SRC_FRIEND, LOG_LEVEL_DBG1, LOG_CALLBACK_DEFAULT);
+
     ble_mesh_init();
     gpio_init();
     saadc_init();
@@ -397,9 +396,9 @@ static void start(void)
 
     ERROR_CHECK(mesh_stack_start());
 
-    pwm_start(WAVEFORM0_PWM_NUMBER);
-    pwm_start(WAVEFORM1_PWM_NUMBER);
-    pwm_start(VOLTAGE_PWM_NUMBER);
+    pwm_start(WAVEFORM_PWM_NUMBER);
+    pwm_start(PAD_VOLTAGE_PWM_NUMBER);
+    pwm_start(PELTIER_PWM_NUMBER);
     
     uint32_t dip_state = 0xFF;
     do
@@ -416,6 +415,7 @@ int main(void)
 
     for (;;)
     {
+        (void)themperature_get();
         (void)sd_app_evt_wait();
     }
 

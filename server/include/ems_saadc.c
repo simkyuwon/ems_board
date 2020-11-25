@@ -19,7 +19,9 @@ const double pt100_resistance_table[] = {
 157.33
 };
 
-uint16_t saadc_result[SAMPLES_IN_BUFFER][SAADC_CHANNEL_COUNT];
+static int32_t saadc_channel_count = 0;
+static uint16_t saadc_result[SAMPLES_IN_BUFFER * SAADC_CHANNEL_MAX_COUNT];
+static uint32_t saadc_result_sum[SAADC_CHANNEL_MAX_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 static volatile SAADC_CH_Type* nrf_saadc_channel_base(const uint32_t saadc_ch_number)
 {
@@ -33,17 +35,17 @@ static volatile SAADC_CH_Type* nrf_saadc_channel_base(const uint32_t saadc_ch_nu
 void nrf_saadc_init()
 {
     NRF_SAADC->RESOLUTION = (SAADC_RESOLUTION_VAL_14bit << SAADC_RESOLUTION_VAL_Pos);
-    NRF_SAADC->SAMPLERATE = (SAADC_SAMPLERATE_MODE_Timers << SAADC_SAMPLERATE_MODE_Pos) |
-                            (1600UL << SAADC_SAMPLERATE_CC_Pos);
+    NRF_SAADC->SAMPLERATE = (SAADC_SAMPLERATE_MODE_Task << SAADC_SAMPLERATE_MODE_Pos);
     NRF_SAADC->RESULT.PTR = (((uint32_t)saadc_result) << SAADC_RESULT_PTR_PTR_Pos);
-    NRF_SAADC->RESULT.MAXCNT = ((SAADC_CHANNEL_COUNT * SAMPLES_IN_BUFFER) << SAADC_RESULT_MAXCNT_MAXCNT_Pos);
+    NRF_SAADC->RESULT.MAXCNT = ((SAMPLES_IN_BUFFER * saadc_channel_count) << SAADC_RESULT_MAXCNT_MAXCNT_Pos);
     NRF_SAADC->ENABLE = (SAADC_ENABLE_ENABLE_Enabled << SAADC_ENABLE_ENABLE_Pos);
 }
 
-bool voltage_saadc_init(const uint32_t saadc_ch_number, 
+bool voltage_saadc_init(uint32_t * p_saadc_ch_number, 
                         const saadc_config_t * const p_config)
 {
-    volatile SAADC_CH_Type* p_nrf_saadc_ch = nrf_saadc_channel_base(saadc_ch_number);
+    *p_saadc_ch_number = saadc_channel_count++;
+    volatile SAADC_CH_Type* p_nrf_saadc_ch = nrf_saadc_channel_base(*p_saadc_ch_number);
 
     if(p_nrf_saadc_ch == NULL)
     {
@@ -61,12 +63,13 @@ bool voltage_saadc_init(const uint32_t saadc_ch_number,
     return true;
 }
 
-bool temperature_saadc_init(const uint32_t sensor_saadc_ch_number,
+bool temperature_saadc_init(uint32_t * p_sensor_saadc_ch_number,
                             const saadc_config_t * const p_sensor_config,
-                            const uint32_t vss_saadc_ch_number,
-                            const saadc_config_t * const p_vss_config)
+                            uint32_t * p_vin_saadc_ch_number,
+                            const saadc_config_t * const p_vin_config)
 {
-    volatile SAADC_CH_Type* p_nrf_th_saadc_ch = nrf_saadc_channel_base(sensor_saadc_ch_number);
+    *p_sensor_saadc_ch_number = saadc_channel_count++;
+    volatile SAADC_CH_Type* p_nrf_th_saadc_ch = nrf_saadc_channel_base(*p_sensor_saadc_ch_number);
 
     if(p_nrf_th_saadc_ch == NULL)
     {
@@ -84,34 +87,24 @@ bool temperature_saadc_init(const uint32_t sensor_saadc_ch_number,
                                 (SAADC_CH_CONFIG_MODE_Diff << SAADC_CH_CONFIG_MODE_Pos) |
                                 (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
 
-    volatile SAADC_CH_Type* p_nrf_ref_saadc_ch = nrf_saadc_channel_base(vss_saadc_ch_number);
+
+    *p_vin_saadc_ch_number = saadc_channel_count++;
+    volatile SAADC_CH_Type* p_nrf_ref_saadc_ch = nrf_saadc_channel_base(*p_vin_saadc_ch_number);
    
     if(p_nrf_ref_saadc_ch == NULL)
     {
         return false;
     }
-
+    
     //RESULT = V(P) * GAIN / REFERENCE * 2 ^ (RESOLUTION)
-    p_nrf_ref_saadc_ch->PSELP = (p_vss_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
-    p_nrf_ref_saadc_ch->CONFIG = (p_vss_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
-                                 (p_vss_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
-                                 (p_vss_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
-                                 (p_vss_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
+    p_nrf_ref_saadc_ch->PSELP = (p_vin_config->pin_p << SAADC_CH_PSELP_PSELP_Pos);
+    p_nrf_ref_saadc_ch->CONFIG = (p_vin_config->resistor_p << SAADC_CH_CONFIG_RESP_Pos) |
+                                 (p_vin_config->gain << SAADC_CH_CONFIG_GAIN_Pos) |
+                                 (p_vin_config->reference << SAADC_CH_CONFIG_REFSEL_Pos) |
+                                 (p_vin_config->acq_time << SAADC_CH_CONFIG_TACQ_Pos) |
                                  (SAADC_CH_CONFIG_MODE_SE << SAADC_CH_CONFIG_MODE_Pos) |
                                  (SAADC_CH_CONFIG_BURST_Disabled << SAADC_CH_CONFIG_BURST_Pos);
     return true;
-}
-
-static void saadc_buffer_update(void)
-{
-    while(NRF_SAADC->STATUS & (SAADC_STATUS_STATUS_Busy << SAADC_STATUS_STATUS_Pos));
-    NRF_SAADC->TASKS_START = 1;
-    while(NRF_SAADC->RESULT.AMOUNT < NRF_SAADC->RESULT.MAXCNT)
-    {
-        NRF_SAADC->EVENTS_END = 0;
-        NRF_SAADC->TASKS_SAMPLE = 1;
-        while(!NRF_SAADC->EVENTS_END);
-    }
 }
 
 static int search_res_table_index(const int min_index, const int max_index, const double resistance)
@@ -142,29 +135,43 @@ double pt100_res2them(const double resistance)
           + (resistance - pt100_resistance_table[table_index]) / (pt100_resistance_table[table_index + 1] - pt100_resistance_table[table_index]);
 }
 
-double themperature_get(void)
+void saadc_buffer_update(void)
 {
-    uint64_t Vpwm_sum = 0;
-    uint64_t Vth_sum = 0;
-    uint64_t Vs_sum = 0;
+    NRF_SAADC->TASKS_START = 1;
+    while(!NRF_SAADC->EVENTS_STARTED);
 
-    saadc_buffer_update();
-    
-    for(int idx = 0; idx < SAMPLES_IN_BUFFER; idx++)
+    while(NRF_SAADC->RESULT.AMOUNT < NRF_SAADC->RESULT.MAXCNT)
     {
-        Vpwm_sum += (uint64_t)saadc_result[idx][0];
-        Vth_sum += (uint64_t)saadc_result[idx][1];
-        Vs_sum += (uint64_t)saadc_result[idx][2];
+        NRF_SAADC->EVENTS_DONE = 0;
+        NRF_SAADC->TASKS_SAMPLE = 1;
+        while(!NRF_SAADC->EVENTS_DONE);
     }
 
-    double Vpwm = Vpwm_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
-    double Vs = Vs_sum * 0.6F / SAMPLES_IN_BUFFER / (1<<14);
-    double Vth = Vth_sum * 0.6F / 4 / SAMPLES_IN_BUFFER / (1<<13);
-    printf("%d %d\n", (int)Vpwm_sum, (int)(Vpwm * 1000UL));
+    for(uint32_t ch_num = 0; ch_num < saadc_channel_count; ++ch_num)
+    {
+        saadc_result_sum[ch_num] = 0;
+        for(uint32_t idx = ch_num; idx < (SAMPLES_IN_BUFFER * saadc_channel_count); idx += saadc_channel_count)
+        {
+            saadc_result_sum[ch_num] += (uint64_t)saadc_result[idx];
+        }
+    }
 
-    Vpwm_sum = 0;
-    Vs_sum = 0;
-    Vth_sum = 0;
-    double Rth = 220.0F * (Vs - 2 * Vth) / (Vs + 2 * Vth);
+    NRF_SAADC->TASKS_STOP = 1;
+    while(!NRF_SAADC->EVENTS_STOPPED);
+}
+
+double themperature_get(void)
+{
+    //uint64_t Vpwm_sum = saadc_result_sum[0];
+    //uint64_t Vpeltier_sum = saadc_result_sum[1];
+    uint64_t Vth_sum = saadc_result_sum[2];
+    uint64_t Vin_sum = saadc_result_sum[3];
+
+    //double Vpwm = Vpwm_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
+    //double Vpeltier = Vpeltier_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
+    double Vin = Vin_sum * 0.6F / SAMPLES_IN_BUFFER / (1<<14);
+    double Vth = Vth_sum * 0.6F / 4 / SAMPLES_IN_BUFFER / (1<<13);
+
+    double Rth = 220.0F * (Vin - 2 * Vth) / (Vin + 2 * Vth);
     return pt100_res2them(Rth);            
 }

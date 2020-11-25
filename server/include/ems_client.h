@@ -8,14 +8,14 @@
 #include "ems_common.h"
 #include "ems_messages.h"
 
-#define EMS_PWM_CLIENT_MODEL_ID 0x1302
-#define EMS_PWM_COMPANY_ID 0xFFFF
+#define EMS_CLIENT_MODEL_ID 0x1302
+#define EMS_COMPANY_ID 0xFFFF
 
 typedef struct __ems_client_t ems_client_t;
 
 typedef void (*ems_state_status_cb_t)(const ems_client_t * p_self,
-                                          const access_message_rx_meta_t * p_meta,
-                                          const ems_status_params_t * p_in);
+                                      const access_message_rx_meta_t * p_meta,
+                                      const ems_status_params_t * p_in);
 
 typedef struct{
     ems_state_status_cb_t ems_status_cb;
@@ -44,11 +44,11 @@ struct __ems_client_t{
 uint32_t ems_client_init(ems_client_t * p_client, uint8_t element_index);
 
 uint32_t ems_client_set(ems_client_t * p_client,
-                            const ems_set_params_t * p_params);
+                        const ems_set_params_t * p_params);
 
 uint32_t ems_client_set_unack(ems_client_t * p_client,
-                                  const ems_set_params_t * p_params,
-                                 uint8_t repeats);
+                              const ems_set_params_t * p_params,
+                              uint8_t repeats);
 
 uint32_t ems_client_get(ems_client_t * p_client);
 

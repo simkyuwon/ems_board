@@ -23,56 +23,12 @@ void read_dip_switch(uint32_t * const pin_input)
                  ((NRF_P0->IN >> (DIP_SWITCH_2 - 2)) & 0x4)) & 0x7;
 }
 
-bool pulse_generator_init(const uint32_t pin_number)
+gpio_pin_state gpio_pin_read(const uint32_t pin_number)
 {
-    if(pin_number >= P0_PIN_NUM)
-    {
-        return false;
-    }
-    
-    gpio_config_t m_gpio_config = PULSE_GPIO_CONFIG(pin_number);
-    if(!gpio_pin_init(&m_gpio_config))
-    {
-        return false;
-    }
-
-    gpiote_config_t m_gpiote_config = PULSE_GPIOTE_CONFIG(pin_number,                     //gpiote task output pin
-                                                          GPIOTE_CONFIG_POLARITY_Toggle,  //task toggle
-                                                          GPIOTE_CONFIG_OUTINIT_Low);     //pin init low
-
-    uint32_t gpiote_number = gpiote_config_init(&m_gpiote_config,                         //pin config
-                                                NULL);                                    //callback function
-    
-    if(gpiote_number < 0)
-    {
-        return false;
-    }
-
-    PULSE_GENERATOR_TIMER->MODE = NRF_TIMER_MODE_TIMER;
-    PULSE_GENERATOR_TIMER->BITMODE = NRF_TIMER_BIT_WIDTH_8;
-    PULSE_GENERATOR_TIMER->PRESCALER = NRF_TIMER_FREQ_31250Hz;
-
-    PULSE_GENERATOR_TIMER->INTENSET = (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos) |
-                                      (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
-    PULSE_GENERATOR_TIMER->CC[0] = 1;
-    PULSE_GENERATOR_TIMER->CC[1] = 10;
-    PULSE_GENERATOR_TIMER->CC[2] = 10;
-    PULSE_GENERATOR_TIMER->SHORTS = (TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos);
-
-    //pulse pin toggle ppi
-    nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel[0]);
-    nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel[0], (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[0]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
-    nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel[0]);
-    nrf_drv_ppi_channel_alloc(&pulse_generator_ppi_channel[1]);
-    nrf_drv_ppi_channel_assign(pulse_generator_ppi_channel[1], (uint32_t)&(PULSE_GENERATOR_TIMER->EVENTS_COMPARE[1]), (uint32_t)&(NRF_GPIOTE->TASKS_OUT[gpiote_number]));
-    nrf_drv_ppi_channel_enable(pulse_generator_ppi_channel[1]);
-
-    PULSE_GENERATOR_TIMER->TASKS_START = 1;
-
-    return true;
+    return (NRF_P0->IN >> pin_number) & 0x1;
 }
 
-bool gpio_pin_write(const uint32_t pin_number, bool state)
+bool gpio_pin_write(const uint32_t pin_number, gpio_pin_state state)
 {
     if(pin_number >= P0_PIN_NUM || !(gpio_pin_used & (1UL << pin_number)))
     {
