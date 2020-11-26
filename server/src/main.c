@@ -427,7 +427,6 @@ int main(void)
     initialize();
     start();
     
-    printf("%x\n", NRF_CLOCK->HFCLKSTAT);
     for (;;)
     {
         (void)sd_app_evt_wait();

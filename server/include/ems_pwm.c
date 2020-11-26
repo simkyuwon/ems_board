@@ -89,7 +89,7 @@ bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_
 
     if(count <= 0)
     {
-        count = 1;
+        return false;
     }
 
     p_config->pulse_count = count;
@@ -312,17 +312,12 @@ bool peltier_heating(uint32_t duty)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PELTIER_PWM_NUMBER);
 
-    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
+    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) || duty > 100)
     {
         return false;
     }
 
     pwm_stop(PELTIER_PWM_NUMBER);
-
-    if(duty > 100)
-    {
-        duty = 100;
-    }
 
     uint32_t period_us = pwm_seq0[PELTIER_PWM_NUMBER][3];
     pwm_seq0[PELTIER_PWM_NUMBER][0] = (duty * period_us / 100) | PWM_POLARITY_ACTIVE_LOW;
@@ -337,17 +332,12 @@ bool peltier_cooling(uint32_t duty)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PELTIER_PWM_NUMBER);
 
-    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk))
+    if(!(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) || duty > 100)
     {
         return false;
     }
 
     pwm_stop(PELTIER_PWM_NUMBER);
-    
-    if(duty > 100)
-    {
-        duty = 100;
-    }
 
     uint32_t period_us = pwm_seq0[PELTIER_PWM_NUMBER][3];
     pwm_seq0[PELTIER_PWM_NUMBER][0] = 0 | PWM_POLARITY_ACTIVE_HIGH;

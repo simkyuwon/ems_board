@@ -22,6 +22,7 @@ const double pt100_resistance_table[] = {
 static int32_t saadc_channel_count = 0;
 static uint16_t saadc_result[SAMPLES_IN_BUFFER * SAADC_CHANNEL_MAX_COUNT];
 static uint32_t saadc_result_sum[SAADC_CHANNEL_MAX_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
+static uint32_t last_update_time = 0;
 
 static volatile SAADC_CH_Type* nrf_saadc_channel_base(const uint32_t saadc_ch_number)
 {
@@ -137,6 +138,13 @@ double pt100_res2them(const double resistance)
 
 void saadc_buffer_update(void)
 {
+    uint32_t now_time = rtc2_counter_get();
+    if(now_time < last_update_time ||
+       RTC2_CLOCK_TO_MS(now_time - last_update_time) < SAADC_UPDATE_TERM)
+    {
+        return;
+    }
+
     NRF_SAADC->TASKS_START = 1;
     while(!NRF_SAADC->EVENTS_STARTED);
 
@@ -158,17 +166,33 @@ void saadc_buffer_update(void)
 
     NRF_SAADC->TASKS_STOP = 1;
     while(!NRF_SAADC->EVENTS_STOPPED);
+
+    last_update_time = rtc2_counter_get();
+}
+
+double pad_voltage_get(uint32_t channel_num)
+{
+    saadc_buffer_update();
+
+    uint64_t Vpwm_sum = saadc_result_sum[channel_num];
+    return Vpwm_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
+}
+
+double peltier_voltage_get(uint32_t channel_num)
+{
+    saadc_buffer_update();
+
+    uint64_t Vpeltier_sum = saadc_result_sum[channel_num];
+   return Vpeltier_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
 }
 
 double themperature_get(void)
 {
-    //uint64_t Vpwm_sum = saadc_result_sum[0];
-    //uint64_t Vpeltier_sum = saadc_result_sum[1];
+    saadc_buffer_update();
+
     uint64_t Vth_sum = saadc_result_sum[2];
     uint64_t Vin_sum = saadc_result_sum[3];
 
-    //double Vpwm = Vpwm_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
-    //double Vpeltier = Vpeltier_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
     double Vin = Vin_sum * 0.6F / SAMPLES_IN_BUFFER / (1<<14);
     double Vth = Vth_sum * 0.6F / 4 / SAMPLES_IN_BUFFER / (1<<13);
 

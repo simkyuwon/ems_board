@@ -5,6 +5,7 @@
 
 #include "nrf_drv_saadc.h"
 #include "ems_board.h"
+#include "ems_rtc.h"
 #include "log.h"
 
 #define SAADC_CHANNEL_MAX_COUNT (8)
@@ -42,6 +43,8 @@
 #define MIN_TEMPERATURE   (0)
 #define MAX_TEMPERATURE   (150)
 
+#define SAADC_UPDATE_TERM  (100)
+
 typedef struct
 {
     nrf_saadc_resistor_t  resistor_p;
@@ -51,14 +54,13 @@ typedef struct
     nrf_saadc_acqtime_t   acq_time;
     nrf_saadc_input_t     pin_p;
     nrf_saadc_input_t     pin_n;
-    int32_t               channel_num;
+    uint32_t              channel_num;
 } saadc_config_t;
 
 void nrf_saadc_init(void);
 
 bool voltage_saadc_init(uint32_t * p_saadc_ch_number,
                         const saadc_config_t * const p_config);
-
 bool temperature_saadc_init(uint32_t * p_sensor_saadc_ch_number,
                             const saadc_config_t * const p_sensor_config,
                             uint32_t * p_vin_saadc_ch_number,
@@ -68,6 +70,8 @@ double pt100_res2them(const double resistance);
 
 void saadc_buffer_update(void);
 
+double pad_voltage_get(uint32_t channel_num);
+double peltier_voltage_get(uint32_t channel_num);
 double themperature_get(void);
 
 #endif
