@@ -74,6 +74,7 @@
 #include "ems_saadc.h"
 #include "ems_gpio.h"
 #include "ems_board.h"
+#include "ems_rtc.h"
 
 /*****************************************************************************
  * Definitions
@@ -88,8 +89,6 @@
 #define PWM_NORMAL_SEQUENCE_NUMBER  (0)
 #define PWM_SIN_SEQUENCE_NUMBER     (1)
 #define PWM_TEST_SEQUENCE_NUMBER    (2)
-
-//static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(1);
 
 /*****************************************************************************
  * Forward declaration of static functions
@@ -124,6 +123,29 @@ static waveform_pwm_config_t m_waveform_pwm_config =  WAVEFORM_PWM_CONFIG(44000,
 static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                              //pwm output pin
                                                                               &m_pwm_sequence_config[PWM_SIN_SEQUENCE_NUMBER]); //pwm form
 static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
+
+static saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
+                                                                            NRF_SAADC_GAIN1_6,             //gain 1/6
+                                                                            NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
+                                                                            NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                            PAD_VOLTAGE_ANALOG_PIN);       //analog input(P) pin
+static saadc_config_t m_peltier_voltage_saadc_config = PELTIER_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
+                                                                                    NRF_SAADC_GAIN1_6,             //gain 1/6
+                                                                                    NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
+                                                                                    NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                    PELTIER_VOLTAGE_ANALOG_PIN);   //analog input(P) pin
+static saadc_config_t m_temperature_sensor_saadc_config = TEMPERATURE_DIFF_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //V(P) resistor bypass
+                                                                                        NRF_SAADC_RESISTOR_DISABLED,   //V(N) resistor bypass
+                                                                                        NRF_SAADC_GAIN4,               //gain 4
+                                                                                        NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V)
+                                                                                        NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                        TEMPERATURE_ANALOG_P_PIN,      //analog input(P) pin
+                                                                                        TEMPERATURE_ANALOG_N_PIN);     //analog input(N) pin
+static saadc_config_t m_temperature_vin_saadc_config = TEMPERATURE_VIN_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,    //V(P) resistor bypass
+                                                                                    NRF_SAADC_GAIN1,                //gain 1
+                                                                                    NRF_SAADC_REFERENCE_INTERNAL,   //refernece internal(0.6V)
+                                                                                    NRF_SAADC_ACQTIME_3US,          //acquisition time 3us, maximum source resistance 10kOhm
+                                                                                    TEMPERATURE_ANALOG_VIN_PIN);    //analog input(P) pin
 
 APP_EMS_PWM_SERVER_DEF(m_ems_server,
                       APP_FORCE_SEGMENTATION,
@@ -278,32 +300,6 @@ static void ble_mesh_init(void)
 
 static void saadc_init(void)
 {
-    saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
-                                                                         NRF_SAADC_GAIN1_6,             //gain 1/6
-                                                                         NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
-                                                                         NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
-                                                                         PAD_VOLTAGE_ANALOG_PIN);       //analog input(P) pin
-
-    saadc_config_t m_peltier_voltage_saadc_config = PELTIER_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
-                                                                                 NRF_SAADC_GAIN1_6,             //gain 1/6
-                                                                                 NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
-                                                                                 NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
-                                                                                 PELTIER_VOLTAGE_ANALOG_PIN);   //analog input(P) pin
-
-    saadc_config_t m_temperature_sensor_saadc_config = TEMPERATURE_DIFF_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //V(P) resistor bypass
-                                                                                     NRF_SAADC_RESISTOR_DISABLED,   //V(N) resistor bypass
-                                                                                     NRF_SAADC_GAIN4,               //gain 4
-                                                                                     NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V)
-                                                                                     NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
-                                                                                     TEMPERATURE_ANALOG_P_PIN,      //analog input(P) pin
-                                                                                     TEMPERATURE_ANALOG_N_PIN);     //analog input(N) pin
-
-    saadc_config_t m_temperature_vin_saadc_config = TEMPERATURE_VIN_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,    //V(P) resistor bypass
-                                                                                 NRF_SAADC_GAIN1,                //gain 1
-                                                                                 NRF_SAADC_REFERENCE_INTERNAL,   //refernece internal(0.6V)
-                                                                                 NRF_SAADC_ACQTIME_3US,          //acquisition time 3us, maximum source resistance 10kOhm
-                                                                                 TEMPERATURE_ANALOG_VIN_PIN);    //analog input(P) pin
-
     (void)voltage_saadc_init(&m_pad_voltage_saadc_config.channel_num, &m_pad_voltage_saadc_config);
     (void)voltage_saadc_init(&m_peltier_voltage_saadc_config.channel_num, &m_peltier_voltage_saadc_config);
     (void)temperature_saadc_init(&m_temperature_sensor_saadc_config.channel_num,
@@ -335,8 +331,19 @@ static void down_button_callback(void)
 {
 }
 
+static bool mode_button_check(void)
+{
+    return (gpio_pin_read(MODE_BUTTON) == GPIO_LOW);
+}
+
 static void mode_button_callback(void)
 {    
+    if(rtc2_delay(2000, mode_button_check))
+    {
+    }
+    else
+    {
+    }
 }
 
 static void gpio_init(void)
@@ -371,6 +378,8 @@ static void initialize(void)
     gpio_init();
     saadc_init();
     pwm_init();
+
+    rtc2_init();
 
     board.control_mode = BUTTON_CONTROL;
 }
@@ -417,10 +426,8 @@ int main(void)
 {
     initialize();
     start();
-
-    peltier_heating(50);
-
-    peltier_cooling(30);
+    
+    printf("%x\n", NRF_CLOCK->HFCLKSTAT);
     for (;;)
     {
         (void)sd_app_evt_wait();

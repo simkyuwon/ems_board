@@ -8,7 +8,7 @@
 #include "log.h"
 
 #define SAADC_CHANNEL_MAX_COUNT (8)
-#define SAMPLES_IN_BUFFER (8)
+#define SAMPLES_IN_BUFFER (32)
 
 #define SE_SAADC_CONFIG(resistor_in, gain_in, reference_in, acq_time_in, pin_in) \
     {                                                                            \
