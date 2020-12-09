@@ -43,7 +43,7 @@
 #define MIN_TEMPERATURE   (0)
 #define MAX_TEMPERATURE   (150)
 
-#define SAADC_UPDATE_TERM  (100)
+#define SAADC_UPDATE_TERM  (3)
 
 typedef struct
 {

@@ -42,8 +42,8 @@ bool button_event_init(uint32_t pin_number, button_cb callback)
         return false;
     }
 
-    NVIC_ClearPendingIRQ(GPIOTE_IRQn);
-    NVIC_EnableIRQ(GPIOTE_IRQn);
+    sd_nvic_SetPriority(GPIOTE_IRQn, 6);
+    sd_nvic_EnableIRQ(GPIOTE_IRQn);
 
     return true;
 }

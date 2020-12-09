@@ -23,16 +23,17 @@
         .pulse_count        = count_in                                       \
     }
 
-#define PAD_VOLTAGE_PWM_CONFIG(pin_in, p_seq_in)  \
-    {                                             \
-        .pin                = pin_in,             \
-        .p_seq              = p_seq_in            \
+#define PAD_VOLTAGE_PWM_CONFIG(pin_in, p_seq_in, counter_in)  \
+    {                                                         \
+        .pin                = pin_in,                         \
+        .p_seq              = p_seq_in,                       \
+        .counter            = counter_in                      \
     }
 
-#define PWM_SEQUENCE_CONFIG(p_origin_dma_in, period_ms_in)                \
+#define PWM_SEQUENCE_CONFIG(p_sequence_in, period_ms_in)                  \
     {                                                                     \
-        .p_origin_dma       = p_origin_dma_in,                            \
-        .count              = sizeof(p_origin_dma_in) / sizeof(uint16_t), \
+        .p_sequence         = p_sequence_in,                              \
+        .seq_size           = sizeof(p_sequence_in) / sizeof(uint16_t),   \
         .period_ms          = period_ms_in                                \
     }
 
@@ -51,11 +52,21 @@
 
 #define PWM_PIN_NOT_CONNECTED   (0x1FUL)
 
-#define PAD_VOLTAGE_COUNTER_TOP (1000)
-#define PAD_VOLTAGE_PERIOD_KHZ  (8)
+#define WAVEFORM_WIDTH_US_MAX   (1000UL)
+#define WAVEFORM_WIDTH_US_MIN   (100UL)
 
-#define PAD_VOLTAGE_LEVEL_MAX   (10)
-#define PAD_VOLTAGE_LEVEL_MIN   (0)
+#define PAD_VOLTAGE_PERIOD_MS_MIN   (10UL)
+
+#define PAD_VOLTAGE_MAX   (20.0F)
+#define PAD_VOLTAGE_MIN   (0.0F)
+
+#define PAD_VOLTAGE_COUNTER_TOP     (16000UL)//16MHz(clock) / 16000(counter top) = 1KHz(period)
+#define PAD_VOLTAGE_COMP_MAX        (1600UL)
+#define PAD_VOLTAGE_COMP_MIN        (16UL)
+
+#define PAD_VOLTAGE_SEQ_COUNTER     (NRF_TIMER4)
+
+#define PAD_VOLTAGE_SAADC_PERIOD_MS (10UL)
 
 typedef enum
 {
@@ -65,10 +76,9 @@ typedef enum
 
 typedef struct
 {
-    const uint16_t *      p_origin_dma;
-    uint16_t *            p_dma;
-    uint32_t              count;
+    const uint16_t *      p_sequence;
     uint32_t              period_ms;
+    uint32_t              seq_size;
 }pwm_sequence_config_t;
 
 typedef struct
@@ -83,6 +93,8 @@ typedef struct
 {
     uint32_t                    pin;
     pwm_sequence_config_t *     p_seq;
+    uint16_t                    dma;
+    NRF_TIMER_Type*             counter;
 }pad_voltage_pwm_config_t;
 
 typedef struct
@@ -100,20 +112,22 @@ bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_
 
 bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us);
 
+bool waveform_pulse_width_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t width_us);
+
 
 bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_config_t * const p_config);
 
-bool pad_voltage_sequence_init(pwm_sequence_config_t * const p_config);
+void pad_voltage_up(void);
 
-bool pad_voltage_sequence_mode_change(pad_voltage_pwm_config_t * const p_config, pwm_sequence_config_t * const p_seq_config);
+void pad_voltage_down(void);
 
-bool pad_voltage_level_up(pwm_sequence_config_t * const p_config);
+bool pad_voltage_set(const double voltage);
 
-bool pad_voltage_level_down(pwm_sequence_config_t * const p_config);
-
-bool pad_voltage_level_set(pwm_sequence_config_t * const p_config, const uint8_t level);
+double pad_target_voltage_get(void);
 
 bool pad_voltage_period_set(pad_voltage_pwm_config_t * const p_config, const uint32_t period_ms);
+
+bool pad_voltage_sequence_mode_change(pad_voltage_pwm_config_t * const p_config, const pwm_sequence_config_t * const p_seq_config);
 
 
 bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * const p_config);
