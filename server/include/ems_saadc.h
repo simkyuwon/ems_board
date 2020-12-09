@@ -6,7 +6,6 @@
 #include "nrf_drv_saadc.h"
 #include "ems_board.h"
 #include "ems_rtc.h"
-#include "log.h"
 
 #define SAADC_CHANNEL_MAX_COUNT (8)
 #define SAMPLES_IN_BUFFER (32)
@@ -72,6 +71,6 @@ void saadc_buffer_update(void);
 
 double pad_voltage_get(uint32_t channel_num);
 double peltier_voltage_get(uint32_t channel_num);
-double themperature_get(void);
+double themperature_get(uint32_t sensor_channel_num, uint32_t input_channel_num);
 
 #endif

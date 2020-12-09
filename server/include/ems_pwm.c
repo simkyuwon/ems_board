@@ -214,7 +214,7 @@ bool pad_voltage_sequence_mode_change(pad_voltage_pwm_config_t * const p_config,
     p_nrf_pwm->SEQ[0].REFRESH = (refersh << PWM_SEQ_REFRESH_CNT_Pos);
     p_nrf_pwm->SEQ[0].ENDDELAY = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
-    p_config->p_seq = p_seq_config;
+    p_config->p_seq =  (pwm_sequence_config_t *)p_seq_config;
 
     pwm_start(PAD_VOLTAGE_PWM_NUMBER);
 }

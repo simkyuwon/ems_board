@@ -35,7 +35,8 @@ bool gpio_pin_write(const uint32_t pin_number, gpio_pin_state state)
         return false;
     }
 
-    NRF_P0->OUT = state << pin_number;
+    NRF_P0->OUT = (NRF_P0->OUT & ~(1UL << pin_number)) |
+                  (state << pin_number);
 
     return true;
 }

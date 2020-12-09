@@ -186,12 +186,12 @@ double peltier_voltage_get(uint32_t channel_num)
    return Vpeltier_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
 }
 
-double themperature_get(void)
+double themperature_get(uint32_t sensor_channel_num, uint32_t input_channel_num)
 {
     saadc_buffer_update();
 
-    uint64_t Vth_sum = saadc_result_sum[2];
-    uint64_t Vin_sum = saadc_result_sum[3];
+    uint64_t Vth_sum = saadc_result_sum[sensor_channel_num];
+    uint64_t Vin_sum = saadc_result_sum[input_channel_num];
 
     double Vin = Vin_sum * 0.6F / SAMPLES_IN_BUFFER / (1<<14);
     double Vth = Vth_sum * 0.6F / 4 / SAMPLES_IN_BUFFER / (1<<13);

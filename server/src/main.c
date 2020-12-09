@@ -95,6 +95,7 @@
  *****************************************************************************/
 static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data);
 static void app_ems_server_get_cb(const app_ems_server_t * p_server, uint8_t * p_position);
+static void pad_voltage_control(void);
 
 /*****************************************************************************
  * Static variables
@@ -323,14 +324,10 @@ static void pwm_init(void)
 static uint16_t idx = 0;
 static void up_button_callback(void)
 {
-    idx = (idx + 1) % 3;
-    pad_voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[idx]);
 }
 
 static void down_button_callback(void)
 {
-    idx = (idx + 2) % 3;
-    pad_voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[idx]);
 }
 
 static bool mode_button_check(void)
@@ -427,9 +424,11 @@ static void start(void)
         ems_board.position = dip_state;
         read_dip_switch(&dip_state);
     }while(ems_board.position != dip_state);
+
+    rtc2_interrupt(PAD_VOLTAGE_SAADC_PERIOD_MS, pad_voltage_control);
 }
 
-void pad_voltage_control(void)
+static void pad_voltage_control(void)
 {
     static double prev_voltage = 3.3F;
 
@@ -446,7 +445,6 @@ void pad_voltage_control(void)
 
     prev_voltage = now_voltage;
 
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "%d\n", m_voltage_pwm_config.p_seq->p_sequence[seq_index]);
     rtc2_interrupt(PAD_VOLTAGE_SAADC_PERIOD_MS, pad_voltage_control);
 }
 
@@ -455,7 +453,6 @@ int main(void)
     initialize();
     start();
 
-    rtc2_interrupt(PAD_VOLTAGE_SAADC_PERIOD_MS, pad_voltage_control);
     for (;;)
     {
         (void)sd_app_evt_wait();

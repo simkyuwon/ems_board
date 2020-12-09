@@ -12,7 +12,7 @@
 #define PELTIER_HEATING_PWM_PIN   (6)
 #define PELTIER_COOLING_PWM_PIN   (7)
 #define PAD_VOLTAGE_PWM_PIN       (17)
-#define PAD_RIGHT_PWM_PIN         (19)
+#define PAD_RIGHT_PWM_PIN         (21)//(19)
 #define PAD_LEFT_PWM_PIN          (20)
 
 #define TEMPERATURE_ANALOG_P_PIN    (NRF_SAADC_INPUT_AIN0)//P0.02
@@ -23,13 +23,13 @@
 
 #define POWER_CONTROL_PIN (13)
 
-#define UP_BUTTON         (15)
-#define DOWN_BUTTON       (16)
+#define UP_BUTTON         (15)//(25)
+#define DOWN_BUTTON       (16)//(26)
 #define POWER_BUTTON      (11)
 #define MODE_BUTTON       (POWER_BUTTON)
 
-#define BLUE_LED          (23)
-#define WHITE_LED         (24)
+#define BLUE_LED          (19)//(23)
+#define WHITE_LED         (18)//(24)
 
 /* */
 

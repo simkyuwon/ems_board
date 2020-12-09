@@ -8,7 +8,6 @@
 
 #include "nrf_drv_pwm.h"
 #include "nrf_drv_ppi.h"
-#include "log.h"
 
 #define PWM_NOPIN         (0xFFFFFFFF)
 
