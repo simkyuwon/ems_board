@@ -107,7 +107,7 @@ static const uint16_t origin_sin_sequence[] = {0, 17, 34, 50, 64, 76, 86, 93, 98
 static const uint16_t origin_test_sequence[] = {25, 100};
 
 static const pwm_sequence_config_t m_normal_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_normal_sequence, //pwm form
-                                                                                      10);                     //period per step(ms)
+                                                                                      1000);                  //period per step(ms)
 static const pwm_sequence_config_t m_sin_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_sin_sequence, 100);
 static const pwm_sequence_config_t m_test_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_test_sequence, 200);
 
@@ -121,15 +121,15 @@ static waveform_pwm_config_t m_waveform_pwm_config =  WAVEFORM_PWM_CONFIG(44000,
                                                                           3,                    //waveform output count
                                                                           PAD_LEFT_PWM_PIN,     //pwm output pin
                                                                           PAD_RIGHT_PWM_PIN);   //pwm output pin
-static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                             //pwm output pin
+static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                                //pwm output pin
                                                                               &m_pwm_sequence_config[PWM_SIN_SEQUENCE_NUMBER], //pwm form
-                                                                              NRF_TIMER4);                                //sequence counter
+                                                                              NRF_TIMER4);                                        //sequence counter
 static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
 
 static saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_VDD1_2,     //resistor VDD/2
                                                                             NRF_SAADC_GAIN1_6,             //gain 1/6
                                                                             NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
-                                                                            NRF_SAADC_ACQTIME_3US,         //acquisition time 3us, maximum source resistance 10kOhm
+                                                                            NRF_SAADC_ACQTIME_5US,         //acquisition time 5us, maximum source resistance 50kOhm
                                                                             PAD_VOLTAGE_ANALOG_PIN);       //analog input(P) pin
 static saadc_config_t m_peltier_voltage_saadc_config = PELTIER_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_VDD1_2,     //resistor VDD/2
                                                                                     NRF_SAADC_GAIN1_6,             //gain 1/6
@@ -178,24 +178,50 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
                 case CMD_CONTROL_BLE:
                     ble_control_mode(&ems_board);
                     break;
-                case CMD_VOLTAGE_PERIOD_SET:
-                    //pad_voltage_period_set(&m_voltage_pwm_config, (uint32_t)data);
+                case CMD_WAVEFORM_START:
+                    pwm_start(WAVEFORM_PWM_NUMBER);
+                    break;
+                case CMD_WAVEFORM_STOP:
+                    pwm_stop(WAVEFORM_PWM_NUMBER);
+                    break;
+                case CMD_WAVEFORM_SINGLESHOT:
+                    waveform_single_shot((uint32_t)data);
+                    break;
+                case CMD_WAVEFORM_PULSE_COUNT_SET:
+                    waveform_pulse_count_set(WAVEFORM_PWM_NUMBER, &m_waveform_pwm_config, (uint16_t)data);
+                    break;
+                case CMD_WAVEFORM_PULSE_PERIOD_SET:
+                    waveform_pulse_period_set(WAVEFORM_PWM_NUMBER, &m_waveform_pwm_config, (uint32_t)data);
+                    break;
+                case CMD_WAVEFORM_PULSE_WIDTH_SET:
+                waveform_pulse_width_set(WAVEFORM_PWM_NUMBER, &m_waveform_pwm_config, (uint16_t)data);
+                    break;
+                case CMD_VOLTAGE_SEQ_PERIOD_SET:
+                    pad_voltage_sequence_period_set(&m_voltage_pwm_config, (uint32_t)data);
                     break;
                 case CMD_VOLTAGE_LEVEL_SET:
-                    ems_board.pad_target_voltage = ((double)data / 1000.0F);
-                    //pad_voltage_level_set(m_voltage_pwm_config.p_seq, (uint8_t)data);
+                    pad_voltage_set(&ems_board, (double)data / 1000.0F);
                     break;
-                case CMD_VOLTAGE_SEQUENCE_CHANGE:
-                    //if((uint32_t)data < ARRAY_SIZE(m_pwm_sequence_config))
-                    //{
-                    //    pad_voltage_sequence_mode_change(&m_voltage_pwm_config, &m_pwm_sequence_config[(uint32_t)data]);
-                    //}
+                case CMD_VOLTAGE_SEQUENCE_SET:
+                    if((uint32_t)data < ARRAY_SIZE(m_pwm_sequence_config))
+                    {
+                        pad_voltage_sequence_mode_set(&m_voltage_pwm_config, &m_pwm_sequence_config[(uint32_t)data]);
+                    }
+                    break;
+                case CMD_PELTIER_STOP:
+                    peltier_stop();
                     break;
                 case CMD_PELTIER_HEATING:
-                    peltier_heating(data);
+                    peltier_heating((uint32_t)data);
                     break;
                 case CMD_PELTIER_COOLING:
-                    peltier_cooling(data);
+                    peltier_cooling((uint32_t)data);
+                    break;
+                case CMD_VOLTAGE_PERIOD_SET:
+                    pad_voltage_period_set((uint16_t)data);
+                    break;
+                case CMD_VOLTAGE_DUTY_SET:
+                    pad_voltage_duty_set(&m_voltage_pwm_config, (uint16_t)data);
                     break;
             }
         }
@@ -239,7 +265,7 @@ static void unicast_address_print(void)
 {
     dsm_local_unicast_address_t node_address;
     dsm_local_unicast_addresses_get(&node_address);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Node Address: 0x%04x \n", node_address.address_start);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Node Address: 0x%04x\n", node_address.address_start);
 }
 
 static void provisioning_complete_cb(void)
@@ -314,14 +340,12 @@ static void saadc_init(void)
 }
 
 static void pwm_init(void)
-{
+{ 
     waveform_pwm_init(WAVEFORM_PWM_NUMBER, &m_waveform_pwm_config);
     pad_voltage_pwm_init(PAD_VOLTAGE_PWM_NUMBER, &m_voltage_pwm_config);
     peltier_pwm_init(PELTIER_PWM_NUMBER, &m_peltier_pwm_config);
 }
 
-
-static uint16_t idx = 0;
 static void up_button_callback(void)
 {
 }
@@ -360,7 +384,7 @@ static void gpio_init(void)
     dip_switch_gpio_init(DIP_SWITCH_2);
 
     gpio_config_t white_led = LED_GPIO_CONFIG(WHITE_LED, GPIO_PIN_CNF_PULL_Pullup);
-    gpio_config_t blue_led = LED_GPIO_CONFIG(BLUE_LED, GPIO_PIN_CNF_PULL_Pullup);
+    gpio_config_t blue_led  = LED_GPIO_CONFIG(BLUE_LED, GPIO_PIN_CNF_PULL_Pullup);
     gpio_pin_init(&white_led);
     gpio_pin_init(&blue_led);
 
@@ -383,9 +407,9 @@ static void initialize(void)
 
     rtc2_init();
 
-    ems_board.control_mode = BUTTON_CONTROL;
-    ems_board.pad_target_voltage = 0;
-    ems_board.peltier_target_voltage = 0;
+    ems_board.control_mode            = BLE_CONTROL;
+    ems_board.pad_target_voltage      = 0.0F;
+    ems_board.peltier_target_voltage  = 0.0F;
 }
 
 static void start(void)
@@ -424,28 +448,6 @@ static void start(void)
         ems_board.position = dip_state;
         read_dip_switch(&dip_state);
     }while(ems_board.position != dip_state);
-
-    rtc2_interrupt(PAD_VOLTAGE_SAADC_PERIOD_MS, pad_voltage_control);
-}
-
-static void pad_voltage_control(void)
-{
-    static double prev_voltage = 3.3F;
-
-    m_voltage_pwm_config.counter->TASKS_CAPTURE[0] = 1;
-    uint32_t seq_index = (m_voltage_pwm_config.counter->CC[0] / m_voltage_pwm_config.p_seq->period_ms) % m_voltage_pwm_config.p_seq->seq_size;
-    int32_t pad_voltage_comp = (int32_t)m_voltage_pwm_config.dma & PWM_COMPARE_Msk;
-
-    double now_voltage = pad_voltage_get(m_pad_voltage_saadc_config.channel_num);
-    double target_voltage = pad_target_voltage_get() * (double)m_voltage_pwm_config.p_seq->p_sequence[seq_index] / 100.0F;
-
-    double diff_voltage = now_voltage - target_voltage;
-
-    /*pad voltage control*/
-
-    prev_voltage = now_voltage;
-
-    rtc2_interrupt(PAD_VOLTAGE_SAADC_PERIOD_MS, pad_voltage_control);
 }
 
 int main(void)
@@ -459,4 +461,33 @@ int main(void)
     }
 
     return 0;
+}
+
+void PWM1_IRQHandler(void)//waveform pwm interrupt
+{
+    if(NRF_PWM1->EVENTS_SEQEND[0])//pad_voltgae_control
+    {
+        static double prev_voltage = 3.3F;
+
+        m_voltage_pwm_config.counter->TASKS_CAPTURE[0] = 1;
+        if(m_voltage_pwm_config.counter->CC[0] % PAD_VOLTAGE_CONTROL_TERM == 0)
+        {
+            uint32_t seq_index = (m_voltage_pwm_config.counter->CC[0] / m_voltage_pwm_config.p_seq->period_ms) % m_voltage_pwm_config.p_seq->seq_size;
+            int32_t pad_voltage_comp = (int32_t)m_voltage_pwm_config.dma & PWM_COMPARE_Msk;
+
+            double now_voltage = pad_voltage_get(m_pad_voltage_saadc_config.channel_num);
+            double target_voltage = ems_board.pad_target_voltage * (double)m_voltage_pwm_config.p_seq->p_sequence[seq_index] / 100.0F;
+
+            double diff_voltage = now_voltage - target_voltage;
+
+            /*pad voltage control*/
+
+            pad_voltage_duty_set(&m_voltage_pwm_config, PAD_VOLTAGE_COUNTER_TOP * m_voltage_pwm_config.p_seq->p_sequence[seq_index] / 100);
+
+            /**/
+
+            prev_voltage = now_voltage;
+        }
+        NRF_PWM0->EVENTS_SEQEND[0] = 0;
+    }
 }

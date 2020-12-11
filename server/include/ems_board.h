@@ -5,15 +5,15 @@
 
 /* pin setting */
 
-#define DIP_SWITCH_0    (29)
-#define DIP_SWITCH_1    (30)
-#define DIP_SWITCH_2    (31)
+#define DIP_SWITCH_0    (29UL)
+#define DIP_SWITCH_1    (30UL)
+#define DIP_SWITCH_2    (31UL)
 
-#define PELTIER_HEATING_PWM_PIN   (6)
-#define PELTIER_COOLING_PWM_PIN   (7)
-#define PAD_VOLTAGE_PWM_PIN       (17)
-#define PAD_RIGHT_PWM_PIN         (21)//(19)
-#define PAD_LEFT_PWM_PIN          (20)
+#define PELTIER_HEATING_PWM_PIN   (6UL)
+#define PELTIER_COOLING_PWM_PIN   (7UL)
+#define PAD_VOLTAGE_PWM_PIN       (17UL)
+#define PAD_RIGHT_PWM_PIN         (19UL)
+#define PAD_LEFT_PWM_PIN          (20UL)
 
 #define TEMPERATURE_ANALOG_P_PIN    (NRF_SAADC_INPUT_AIN0)//P0.02
 #define TEMPERATURE_ANALOG_N_PIN    (NRF_SAADC_INPUT_AIN1)//P0.03
@@ -21,20 +21,20 @@
 #define PELTIER_VOLTAGE_ANALOG_PIN  (NRF_SAADC_INPUT_AIN3)//P0.05
 #define PAD_VOLTAGE_ANALOG_PIN      (NRF_SAADC_INPUT_AIN4)//P0.28
 
-#define POWER_CONTROL_PIN (13)
+#define POWER_CONTROL_PIN (13UL)
 
-#define UP_BUTTON         (15)//(25)
-#define DOWN_BUTTON       (16)//(26)
-#define POWER_BUTTON      (11)
+#define UP_BUTTON         (25UL)
+#define DOWN_BUTTON       (26UL)
+#define POWER_BUTTON      (11UL)
 #define MODE_BUTTON       (POWER_BUTTON)
 
-#define BLUE_LED          (19)//(23)
-#define WHITE_LED         (18)//(24)
+#define BLUE_LED          (23UL)
+#define WHITE_LED         (24UL)
 
 /* */
 
-#define BUTTON_CONTROL    (0)
-#define BLE_CONTROL       (1)
+#define BUTTON_CONTROL    (0UL)
+#define BLE_CONTROL       (1UL)
 
 typedef struct
 {

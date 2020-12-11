@@ -12,7 +12,7 @@
 static uint32_t status_send(ems_server_t * p_server,
                             const access_message_rx_t * p_message,
                             const ems_status_params_t * p_params)
-                            {
+{
     ems_status_msg_pkt_t msg_pkt;
 
     msg_pkt.board_position = p_params->board_position;

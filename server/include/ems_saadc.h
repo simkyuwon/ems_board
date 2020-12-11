@@ -44,6 +44,8 @@
 
 #define SAADC_UPDATE_TERM  (3)
 
+#define PT_SAADC_PERIOD_MS (25UL)
+
 typedef struct
 {
     nrf_saadc_resistor_t  resistor_p;

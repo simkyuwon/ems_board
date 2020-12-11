@@ -6,7 +6,7 @@
 #include "ems_common.h"
 #include "ems_messages.h"
 
-#define EMS_SERVER_MODEL_ID (0x1002)
+#define EMS_SERVER_MODEL_ID (0x1234)
 
 typedef struct __ems_server_t ems_server_t;
 

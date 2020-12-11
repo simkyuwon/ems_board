@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ems_board.h"
 #include "nrf_drv_pwm.h"
 #include "nrf_drv_ppi.h"
 
@@ -26,7 +27,8 @@
     {                                                         \
         .pin                = pin_in,                         \
         .p_seq              = p_seq_in,                       \
-        .counter            = counter_in                      \
+        .counter            = counter_in,                     \
+        .dma                = 0 | PWM_POLARITY_ACTIVE_HIGH    \
     }
 
 #define PWM_SEQUENCE_CONFIG(p_sequence_in, period_ms_in)                  \
@@ -56,12 +58,14 @@
 
 #define PAD_VOLTAGE_PERIOD_MS_MIN   (10UL)
 
-#define PAD_VOLTAGE_MAX   (20.0F)
+#define PAD_VOLTAGE_MAX   (40.0F)
 #define PAD_VOLTAGE_MIN   (0.0F)
 
-#define PAD_VOLTAGE_COUNTER_TOP     (16000UL)//16MHz(clock) / 16000(counter top) = 1KHz(period)
-#define PAD_VOLTAGE_COMP_MAX        (1600UL)
-#define PAD_VOLTAGE_COMP_MIN        (16UL)
+#define PAD_VOLTAGE_COUNTER_TOP     (1000UL)//16MHz(clock) / 16000(counter top) = 1KHz(period)
+#define PAD_VOLTAGE_COMP_MAX        (100UL)
+#define PAD_VOLTAGE_COMP_MIN        (1UL)
+
+#define PAD_VOLTAGE_CONTROL_TERM    (5UL)//pwm period count
 
 #define PAD_VOLTAGE_SEQ_COUNTER     (NRF_TIMER4)
 
@@ -107,26 +111,29 @@ static NRF_PWM_Type* nrf_pwm_base(const uint32_t pwm_number);
 
 bool waveform_pwm_init(const uint32_t pwm_number, const waveform_pwm_config_t * const p_config);
 
-bool waveform_pulse_count_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count);
+bool waveform_pulse_count_set(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t count);
 
-bool waveform_pulse_period_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t period_us);
+bool waveform_pulse_period_set(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint32_t period_us);
 
-bool waveform_pulse_width_change(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t width_us);
+bool waveform_pulse_width_set(const uint32_t pwm_number, waveform_pwm_config_t * const p_config, uint16_t width_us);
 
 
 bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_config_t * const p_config);
 
-void pad_voltage_up(void);
+void pad_voltage_up(board_state * const p_board);
 
-void pad_voltage_down(void);
+void pad_voltage_down(board_state * const p_board);
 
-bool pad_voltage_set(const double voltage);
+bool pad_voltage_set(board_state * const p_board, const double voltage);
 
-double pad_target_voltage_get(void);
+bool pad_voltage_sequence_period_set(pad_voltage_pwm_config_t * const p_config, const uint32_t period_ms);
 
-bool pad_voltage_period_set(pad_voltage_pwm_config_t * const p_config, const uint32_t period_ms);
+bool pad_voltage_sequence_mode_set(pad_voltage_pwm_config_t * const p_config, const pwm_sequence_config_t * const p_seq_config);
 
-bool pad_voltage_sequence_mode_change(pad_voltage_pwm_config_t * const p_config, const pwm_sequence_config_t * const p_seq_config);
+
+bool pad_voltage_period_set(const uint16_t period_us);
+
+bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const uint16_t period_us);
 
 
 bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * const p_config);
@@ -138,7 +145,7 @@ bool peltier_cooling(uint32_t duty);
 bool peltier_stop(void);
 
 
-bool pwm_single_shot(const uint32_t pwm_number);
+bool waveform_single_shot(const uint32_t count);
 
 bool pwm_start(const uint32_t pwm_number);
 

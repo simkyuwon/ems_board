@@ -8,7 +8,7 @@
 #include "ems_common.h"
 #include "ems_messages.h"
 
-#define EMS_CLIENT_MODEL_ID 0x1302
+#define EMS_CLIENT_MODEL_ID 0x1235
 #define EMS_COMPANY_ID 0xFFFF
 
 typedef struct __ems_client_t ems_client_t;

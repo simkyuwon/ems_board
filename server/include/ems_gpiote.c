@@ -15,10 +15,10 @@ int gpiote_config_init(const gpiote_config_t * const p_config, button_cb callbac
                                        (p_config->polarity << GPIOTE_CONFIG_POLARITY_Pos) |
                                        (p_config->outinit << GPIOTE_CONFIG_OUTINIT_Pos);
 
-    if(p_config->mode == GPIOTE_CONFIG_MODE_Event)
+    if(p_config->mode == GPIOTE_CONFIG_MODE_Event)//external interrupt from gpio
     {
-        NRF_GPIOTE->INTENSET = (GPIOTE_INTENCLR_IN0_Enabled << gpiote_count);
-        NRF_GPIOTE->EVENTS_IN[gpiote_count] = 0;
+        NRF_GPIOTE->INTENSET                = (GPIOTE_INTENCLR_IN0_Enabled << gpiote_count);
+        NRF_GPIOTE->EVENTS_IN[gpiote_count] = false;
     }
 
     gpiote_event_config_array[gpiote_count].cb = callback;
