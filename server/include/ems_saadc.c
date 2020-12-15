@@ -22,7 +22,6 @@ const double pt100_resistance_table[] = {
 static int32_t saadc_channel_count = 0;
 static uint16_t saadc_result[SAMPLES_IN_BUFFER * SAADC_CHANNEL_MAX_COUNT];
 static uint32_t saadc_result_sum[SAADC_CHANNEL_MAX_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
-static uint32_t last_update_time = 0;
 
 static volatile SAADC_CH_Type* nrf_saadc_channel_base(const uint32_t saadc_ch_number)
 {
@@ -140,13 +139,6 @@ double pt100_res2them(const double resistance)
 
 void saadc_buffer_update(void)
 {
-    uint32_t now_time = rtc2_counter_get();
-    if(now_time < last_update_time ||
-       RTC2_CLOCK_TO_MS(now_time - last_update_time) < SAADC_UPDATE_TERM)
-    {
-        return;
-    }
-
     NRF_SAADC->TASKS_START = true;
     while(!NRF_SAADC->EVENTS_STARTED);
 
@@ -168,11 +160,9 @@ void saadc_buffer_update(void)
 
     NRF_SAADC->TASKS_STOP = true;
     while(!NRF_SAADC->EVENTS_STOPPED);
-
-    last_update_time = rtc2_counter_get();
 }
 
-double pad_voltage_get(uint32_t channel_num)
+double pad_voltage_get(const uint32_t channel_num)
 {
     saadc_buffer_update();
 
@@ -180,7 +170,7 @@ double pad_voltage_get(uint32_t channel_num)
     return Vpwm_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
 }
 
-double peltier_voltage_get(uint32_t channel_num)
+double peltier_voltage_get(const uint32_t channel_num)
 {
     saadc_buffer_update();
 
@@ -188,7 +178,7 @@ double peltier_voltage_get(uint32_t channel_num)
    return Vpeltier_sum * 3.6F / SAMPLES_IN_BUFFER / (1<<14);
 }
 
-double themperature_get(uint32_t sensor_channel_num, uint32_t input_channel_num)
+double temperature_get(const uint32_t sensor_channel_num, const uint32_t input_channel_num)
 {
     saadc_buffer_update();
 

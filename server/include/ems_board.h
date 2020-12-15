@@ -25,7 +25,7 @@
 
 #define UP_BUTTON         (25UL)
 #define DOWN_BUTTON       (26UL)
-#define POWER_BUTTON      (11UL)
+#define POWER_BUTTON      (14UL)//(11UL)
 #define MODE_BUTTON       (POWER_BUTTON)
 
 #define BLUE_LED          (23UL)
@@ -42,7 +42,7 @@ typedef struct
     uint8_t   position;
 
     double    pad_target_voltage;
-    double    peltier_target_voltage;
+    double    peltier_target_temperature;
 }board_state;
 
 void button_control_mode(board_state * p_board);

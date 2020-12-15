@@ -71,8 +71,8 @@ double pt100_res2them(const double resistance);
 
 void saadc_buffer_update(void);
 
-double pad_voltage_get(uint32_t channel_num);
-double peltier_voltage_get(uint32_t channel_num);
-double themperature_get(uint32_t sensor_channel_num, uint32_t input_channel_num);
+double pad_voltage_get(const uint32_t channel_num);
+double peltier_voltage_get(const uint32_t channel_num);
+double temperature_get(const uint32_t sensor_channel_num, const uint32_t input_channel_num);
 
 #endif

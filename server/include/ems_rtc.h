@@ -13,7 +13,7 @@
 #define RTC2_COMPARE_COUNT        (4UL)
 #define RTC2_CC_DELAY_MIN         (5UL)
 
-#define RTC2_CLOCK_TO_MS(counter) ((counter) * RTC2_CLOCK_PRESCALER * 1000UL / RTC2_CLOCK_FREQ)
+#define RTC2_CLOCK_TO_MS(counter) (uint32_t)((uint64_t)(counter) * RTC2_CLOCK_PRESCALER * 1000ULL / RTC2_CLOCK_FREQ)
 #define RTC2_MS_TO_CLOCK(ms)      ((ms) * RTC2_CLOCK_FREQ / RTC2_CLOCK_PRESCALER / 1000UL)
 
 #ifndef NULL

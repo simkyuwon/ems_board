@@ -56,16 +56,19 @@
 #define WAVEFORM_WIDTH_US_MAX   (1000UL)
 #define WAVEFORM_WIDTH_US_MIN   (100UL)
 
+#define PAD_VOLTAGE_MAX   (50.0F)
+#define PAD_VOLTAGE_MIN   (3.3F)
+
+#define PAD_VOLTAGE_PRESCALER       (PWM_PRESCALER_PRESCALER_DIV_1)
+#define PAD_VOLTAGE_COUNTER_TOP     (320UL)//16MHz(clock) / 320(counter top) = 50KHz
+#define PAD_VOLTAGE_COMP_MAX        (192UL)//duty 60%(60~65V)
+#define PAD_VOLTAGE_COMP_MIN        (0L)
+
+#define PAD_VOLTAGE_HZ              (16000000UL / (1UL << PAD_VOLTAGE_PRESCALER) / PAD_VOLTAGE_COUNTER_TOP)
+
 #define PAD_VOLTAGE_PERIOD_MS_MIN   (10UL)
 
-#define PAD_VOLTAGE_MAX   (40.0F)
-#define PAD_VOLTAGE_MIN   (0.0F)
-
-#define PAD_VOLTAGE_COUNTER_TOP     (1000UL)//16MHz(clock) / 16000(counter top) = 1KHz(period)
-#define PAD_VOLTAGE_COMP_MAX        (100UL)
-#define PAD_VOLTAGE_COMP_MIN        (1UL)
-
-#define PAD_VOLTAGE_CONTROL_TERM    (5UL)//pwm period count
+#define PAD_VOLTAGE_CONTROL_TERM    (PAD_VOLTAGE_HZ / 10000 + (PAD_VOLTAGE_HZ < 10000 ? 1 : 0))//10KHz
 
 #define PAD_VOLTAGE_SEQ_COUNTER     (NRF_TIMER4)
 
@@ -130,10 +133,11 @@ bool pad_voltage_sequence_period_set(pad_voltage_pwm_config_t * const p_config, 
 
 bool pad_voltage_sequence_mode_set(pad_voltage_pwm_config_t * const p_config, const pwm_sequence_config_t * const p_seq_config);
 
+bool pad_voltage_comp_set(pad_voltage_pwm_config_t * const p_config, const uint16_t comp);
 
-bool pad_voltage_period_set(const uint16_t period_us);
+bool pad_voltage_period_set(const uint32_t clock);
 
-bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const uint16_t period_us);
+bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const double duty);
 
 
 bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * const p_config);
@@ -150,5 +154,7 @@ bool waveform_single_shot(const uint32_t count);
 bool pwm_start(const uint32_t pwm_number);
 
 bool pwm_stop(const uint32_t pwm_number);
+
+bool pwm_state_get(const uint32_t pwm_number);
 
 #endif

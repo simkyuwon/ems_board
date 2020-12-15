@@ -1,5 +1,5 @@
 #include "ems_pwm.h"
-#include "log.h"
+
 static nrf_ppi_channel_t pwm_ppi_channel[3];
 static nrf_ppi_channel_t pad_seq_cnt_ppi_channel;
 
@@ -50,7 +50,7 @@ bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * 
 
     p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
     p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_16 << PWM_PRESCALER_PRESCALER_Pos);    //clock = 16MHz / 16 = 1MHz
+    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_1 << PWM_PRESCALER_PRESCALER_Pos);    //clock = 16MHz / 1 = 16MHz
     p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm << PWM_DECODER_LOAD_Pos) |
                             (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
     p_nrf_pwm->LOOP       = (1 << PWM_LOOP_CNT_Pos);                                            //LOOP(SEQ[0] -> SEQ[1]) -> ppi -> (SEQ[0] ...
@@ -170,10 +170,10 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
     
     p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
     p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_16 << PWM_PRESCALER_PRESCALER_Pos);    //clock = 16MHz / 16 = 1MHz
+    p_nrf_pwm->PRESCALER  = (PAD_VOLTAGE_PRESCALER << PWM_PRESCALER_PRESCALER_Pos);             //clock = 16MHz / 1 = 16MHz
     p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_Common << PWM_DECODER_LOAD_Pos) |
                             (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
-    p_nrf_pwm->COUNTERTOP = PAD_VOLTAGE_COUNTER_TOP;                                            //1KHz(period) = 1MHz(clock) / 1K(COUNTER_TOP)
+    p_nrf_pwm->COUNTERTOP = PAD_VOLTAGE_COUNTER_TOP;                                            //3125Hz(period) = 16MHz(clock) / 5120(COUNTER_TOP)
 
     p_nrf_pwm->SEQ[0].PTR = ((uint32_t)(&p_config->dma) << PWM_SEQ_PTR_PTR_Pos);
     p_nrf_pwm->SEQ[0].CNT = (1 << PWM_SEQ_CNT_CNT_Pos);
@@ -181,8 +181,8 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
     //period_ms = (REFRESH.CNT + 1) / period_Hz
     //REFRESH.CNT = period_ms * period_Hz - 1
     uint32_t refersh = (p_config->p_seq->period_ms > PAD_VOLTAGE_PERIOD_MS_MIN) ?
-                       (p_config->p_seq->period_ms - 1) : PAD_VOLTAGE_PERIOD_MS_MIN;
-
+                       p_config->p_seq->period_ms : PAD_VOLTAGE_PERIOD_MS_MIN;
+    refersh = refersh * PAD_VOLTAGE_HZ - 1;
     p_nrf_pwm->SEQ[0].REFRESH   = (refersh << PWM_SEQ_REFRESH_CNT_Pos);
     p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
@@ -200,7 +200,7 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
     nrf_drv_ppi_channel_assign(pad_seq_cnt_ppi_channel, (uint32_t)&(p_nrf_pwm->EVENTS_PWMPERIODEND), (uint32_t)&(p_nrf_timer->TASKS_COUNT));
     nrf_drv_ppi_channel_enable(pad_seq_cnt_ppi_channel);
 
-    p_nrf_pwm->INTENSET = (PWM_INTENSET_SEQEND0_Set << PWM_INTENSET_SEQEND0_Pos);
+    p_nrf_pwm->INTENSET = (PWM_INTENSET_PWMPERIODEND_Set << PWM_INTENSET_PWMPERIODEND_Pos);
 
     sd_nvic_SetPriority(PWM1_IRQn, 6);
     sd_nvic_EnableIRQ(PWM1_IRQn);
@@ -224,6 +224,8 @@ bool pad_voltage_sequence_mode_set(pad_voltage_pwm_config_t * const p_config, co
     p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
     p_config->p_seq =  (pwm_sequence_config_t *)p_seq_config;
+
+    p_config->counter->TASKS_CLEAR = true;
 
     pwm_start(PAD_VOLTAGE_PWM_NUMBER);
 }
@@ -278,22 +280,41 @@ bool pad_voltage_sequence_period_set(pad_voltage_pwm_config_t * const p_config, 
     return true;
 }
 
-bool pad_voltage_period_set(const uint16_t period_us)
+bool pad_voltage_comp_set(pad_voltage_pwm_config_t * const p_config, const uint16_t comp)
 {
+    if(comp < PAD_VOLTAGE_COMP_MIN || comp > PAD_VOLTAGE_COMP_MAX)
+    {
+        return false;
+    }
+
+
     pwm_stop(PAD_VOLTAGE_PWM_NUMBER);
 
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PAD_VOLTAGE_PWM_NUMBER);
 
-    p_nrf_pwm->COUNTERTOP = period_us;
+    p_config->dma = comp | PWM_POLARITY_ACTIVE_HIGH;
 
     pwm_start(PAD_VOLTAGE_PWM_NUMBER);
 
     return true;
 }
 
-bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const uint16_t period_us)
+bool pad_voltage_period_set(const uint32_t clock)
 {
-    if(period_us & (1 << 15))
+    pwm_stop(PAD_VOLTAGE_PWM_NUMBER);
+
+    NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PAD_VOLTAGE_PWM_NUMBER);
+
+    p_nrf_pwm->COUNTERTOP = clock;
+
+    pwm_start(PAD_VOLTAGE_PWM_NUMBER);
+
+    return true;
+}
+
+bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const double duty)
+{
+    if(duty < 0 || duty > 1)
     {
         return false;
     }
@@ -302,7 +323,7 @@ bool pad_voltage_duty_set(pad_voltage_pwm_config_t * const p_config, const uint1
 
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PAD_VOLTAGE_PWM_NUMBER);
 
-    p_config->dma = period_us | PWM_POLARITY_ACTIVE_HIGH;
+    p_config->dma = (uint16_t)((double)p_nrf_pwm->COUNTERTOP * duty) | PWM_POLARITY_ACTIVE_HIGH;
 
     pwm_start(PAD_VOLTAGE_PWM_NUMBER);
 
@@ -341,6 +362,12 @@ bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * co
 
     nrf_drv_ppi_channel_alloc(&pwm_ppi_channel[pwm_number]);
     nrf_drv_ppi_channel_assign(pwm_ppi_channel[pwm_number], (uint32_t)&(p_nrf_pwm->EVENTS_SEQEND[0]), (uint32_t)&(p_nrf_pwm->TASKS_SEQSTART[0]));
+
+    p_nrf_pwm->INTENSET = (PWM_INTENSET_SEQEND0_Set << PWM_INTENSET_SEQEND0_Pos);
+
+    sd_nvic_SetPriority(PWM2_IRQn, 6);
+    sd_nvic_EnableIRQ(PWM2_IRQn);
+
     return true;
 }
 
@@ -471,4 +498,9 @@ bool pwm_stop(const uint32_t pwm_number)
     while(!p_nrf_pwm->EVENTS_STOPPED);
 
     return true;
+}
+
+bool pwm_state_get(const uint32_t pwm_number)
+{
+    return pwm_is_running[pwm_number];
 }

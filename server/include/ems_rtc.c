@@ -1,5 +1,5 @@
 #include "ems_rtc.h"
-
+#include "log.h"
 static uint32_t rtc2_using_count;
 static rtc_cb rtc2_compare_cb[RTC2_COMPARE_COUNT];
 static uint32_t rtc2_overflow_count;
@@ -35,7 +35,9 @@ static uint32_t rtc2_start(void)
     if(rtc2_using_count == 0)//first event
     {
         rtc2_overflow_count = 0;
+        NRF_RTC2->EVENTS_OVRFLW = false;
         NRF_RTC2->TASKS_CLEAR = true;
+        while(NRF_RTC2->COUNTER);
         NRF_RTC2->TASKS_START = true;
     }
     ++rtc2_using_count;
@@ -58,20 +60,20 @@ static bool rtc2_stop(void)
 
 bool rtc2_delay(const uint32_t delay_ms, check_func p_func)
 {
+    bool ret = true;
     uint32_t start_counter = rtc2_start();
-    while(RTC2_CLOCK_TO_MS(rtc2_counter_get() - start_counter) < delay_ms)
+
+    uint32_t tmp_counter;
+    while(RTC2_CLOCK_TO_MS(tmp_counter = rtc2_counter_get() - start_counter) < delay_ms)
     {
-        if(p_func != NULL)
+        if(p_func != NULL && p_func() == false)
         {
-            if(!p_func())
-            {
-                rtc2_stop();
-                return false;
-            }
+            ret = false;
+            break;
         }
     }
     rtc2_stop();
-    return true;
+    return ret;
 }
 
 static int32_t alloc_compare_channel(rtc_cb p_cb)
