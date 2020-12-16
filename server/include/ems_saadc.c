@@ -162,6 +162,7 @@ void saadc_buffer_update(void)
     while(!NRF_SAADC->EVENTS_STOPPED);
 }
 
+//RESULT = [V(P) - V(N)] * GAIN / REFERENCE * 2^(RESOLUTION - m)
 double pad_voltage_get(const uint32_t channel_num)
 {
     saadc_buffer_update();

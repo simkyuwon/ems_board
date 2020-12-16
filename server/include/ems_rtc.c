@@ -1,7 +1,8 @@
 #include "ems_rtc.h"
-#include "log.h"
+
 static uint32_t rtc2_using_count;
 static rtc_cb rtc2_compare_cb[RTC2_COMPARE_COUNT];
+static void * rtc2_compare_cb_args[RTC2_COMPARE_COUNT];
 static uint32_t rtc2_overflow_count;
 
 void rtc2_init(void)
@@ -16,7 +17,7 @@ void rtc2_init(void)
         rtc2_compare_cb[idx] = NULL;
     }
 
-    sd_nvic_SetPriority(RTC2_IRQn, 7);
+    sd_nvic_SetPriority(RTC2_IRQn, 6);
     sd_nvic_EnableIRQ(RTC2_IRQn);
 }
 
@@ -63,8 +64,7 @@ bool rtc2_delay(const uint32_t delay_ms, check_func p_func)
     bool ret = true;
     uint32_t start_counter = rtc2_start();
 
-    uint32_t tmp_counter;
-    while(RTC2_CLOCK_TO_MS(tmp_counter = rtc2_counter_get() - start_counter) < delay_ms)
+    while(RTC2_CLOCK_TO_MS(rtc2_counter_get() - start_counter) < delay_ms)
     {
         if(p_func != NULL && p_func() == false)
         {
@@ -76,13 +76,14 @@ bool rtc2_delay(const uint32_t delay_ms, check_func p_func)
     return ret;
 }
 
-static int32_t alloc_compare_channel(rtc_cb p_cb)
+static int32_t alloc_compare_channel(rtc_cb p_cb, void * p_args)
 {
     for(int idx = 0; idx < RTC2_COMPARE_COUNT; idx++)
     {
         if(rtc2_compare_cb[idx] == NULL)
         {
             rtc2_compare_cb[idx] = p_cb;
+            rtc2_compare_cb_args[idx] = p_args;
             rtc2_start();
             return idx;
         }
@@ -91,9 +92,9 @@ static int32_t alloc_compare_channel(rtc_cb p_cb)
     return -1;
 }
 
-bool rtc2_interrupt(uint32_t delay_ms, rtc_cb p_cb)
+bool rtc2_interrupt(uint32_t delay_ms, rtc_cb p_cb, void * p_args)
 {
-    int32_t channel_num = alloc_compare_channel(p_cb);
+    int32_t channel_num = alloc_compare_channel(p_cb, p_args);
     if(channel_num < 0)
     {
         return false;
@@ -106,6 +107,7 @@ bool rtc2_interrupt(uint32_t delay_ms, rtc_cb p_cb)
     NRF_RTC2->INTENSET                    = (RTC_INTENSET_COMPARE0_Set << (RTC_INTENSET_COMPARE0_Pos + channel_num));
 
     NRF_RTC2->CC[channel_num] = now_counter + RTC2_MS_TO_CLOCK(delay_ms);
+
     return true;
 }
 
@@ -117,8 +119,11 @@ void RTC2_IRQHandler(void)
         {
             NRF_RTC2->INTENCLR                = (RTC_INTENCLR_COMPARE0_Clear << (RTC_INTENCLR_COMPARE0_Pos + ch_num));
             NRF_RTC2->EVENTS_COMPARE[ch_num]  = false;
-            rtc2_compare_cb[ch_num]();
+            rtc_cb p_func = rtc2_compare_cb[ch_num];
+            void * p_args = rtc2_compare_cb_args[ch_num];
             rtc2_compare_cb[ch_num]           = NULL;
+            rtc2_compare_cb_args[ch_num]      = NULL;
+            p_func(p_args);
             rtc2_stop();
         }
     }

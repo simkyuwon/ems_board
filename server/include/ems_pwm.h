@@ -44,9 +44,9 @@
         .period_us          = period_in_us,                         \
     }
 
-#define WAVEFORM_PWM_NUMBER     (0)
-#define PAD_VOLTAGE_PWM_NUMBER  (1)
-#define PELTIER_PWM_NUMBER      (2)
+#define WAVEFORM_PWM_NUMBER     (0UL)
+#define PAD_VOLTAGE_PWM_NUMBER  (1UL)
+#define PELTIER_PWM_NUMBER      (2UL)
 
 #define PWM_POLARITY_Msk        (0x8000UL)
 #define PWM_COMPARE_Msk         (0x7FFFUL)
@@ -59,9 +59,9 @@
 #define PAD_VOLTAGE_MAX   (50.0F)
 #define PAD_VOLTAGE_MIN   (3.3F)
 
-#define PAD_VOLTAGE_PRESCALER       (PWM_PRESCALER_PRESCALER_DIV_1)
-#define PAD_VOLTAGE_COUNTER_TOP     (320UL)//16MHz(clock) / 320(counter top) = 50KHz
-#define PAD_VOLTAGE_COMP_MAX        (192UL)//duty 60%(60~65V)
+#define PAD_VOLTAGE_PRESCALER       (PWM_PRESCALER_PRESCALER_DIV_1) //16MHz(source clock) / 1(prescaler) = 16MHz(clock)
+#define PAD_VOLTAGE_COUNTER_TOP     (320UL)                         //16MHz(clock) / 320(counter top) = 50KHz
+#define PAD_VOLTAGE_COMP_MAX        (192L)                          //duty 60%(60~65V)
 #define PAD_VOLTAGE_COMP_MIN        (0L)
 
 #define PAD_VOLTAGE_HZ              (16000000UL / (1UL << PAD_VOLTAGE_PRESCALER) / PAD_VOLTAGE_COUNTER_TOP)
@@ -72,12 +72,10 @@
 
 #define PAD_VOLTAGE_SEQ_COUNTER     (NRF_TIMER4)
 
-#define PAD_VOLTAGE_SAADC_PERIOD_MS (10UL)
-
 typedef enum
 {
-    PWM_POLARITY_ACTIVE_LOW = 0,
-    PWM_POLARITY_ACTIVE_HIGH = 1 << 15,
+    PWM_POLARITY_ACTIVE_LOW = 0U,
+    PWM_POLARITY_ACTIVE_HIGH = 1U << 15,
 }pwm_polarity_t;
 
 typedef struct
