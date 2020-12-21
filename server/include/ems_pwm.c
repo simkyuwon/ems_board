@@ -46,16 +46,16 @@ bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * 
     pwm_seq1[pwm_number][1] = p_config->pulse_width_us | PWM_POLARITY_ACTIVE_LOW;
     pwm_seq1[pwm_number][3] = p_config->pulse_width_us;
 
-    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
-    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_1 << PWM_PRESCALER_PRESCALER_Pos);    //clock = 16MHz / 1 = 16MHz
-    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm << PWM_DECODER_LOAD_Pos) |
+    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up            << PWM_MODE_UPDOWN_Pos);
+    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled     << PWM_ENABLE_ENABLE_Pos);
+    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_1 << PWM_PRESCALER_PRESCALER_Pos);       //clock = 16MHz / 1 = 16MHz
+    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm     << PWM_DECODER_LOAD_Pos) |
                             (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
-    p_nrf_pwm->LOOP       = (1 << PWM_LOOP_CNT_Pos);                                            //LOOP(SEQ[0] -> SEQ[1]) -> ppi -> (SEQ[0] ...
+    p_nrf_pwm->LOOP       = (1 << PWM_LOOP_CNT_Pos);                                              //LOOP(SEQ[0] -> SEQ[1]) -> ppi -> (SEQ[0] ...
 
     p_nrf_pwm->SEQ[0].PTR       = ((uint32_t)(pwm_seq0[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
     p_nrf_pwm->SEQ[0].CNT       = (ARRAY_SIZE(pwm_seq0[pwm_number]) << PWM_SEQ_CNT_CNT_Pos);
-    p_nrf_pwm->SEQ[0].REFRESH   = ((p_config->pulse_count - 1) << PWM_SEQ_REFRESH_CNT_Pos);     //pwm period count = REFRESH.CNT + 1 
+    p_nrf_pwm->SEQ[0].REFRESH   = ((p_config->pulse_count - 1)      << PWM_SEQ_REFRESH_CNT_Pos);  //pwm period count = REFRESH.CNT + 1 
     p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
  
     p_nrf_pwm->SEQ[1].PTR       = ((uint32_t)(pwm_seq1[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
@@ -77,17 +77,12 @@ bool waveform_pulse_count_set(const uint32_t pwm_number, waveform_pwm_config_t *
         return false;
     }
 
-    if(count >= (p_config->pulse_period_us / p_config->pulse_width_us))
+    if(count >= (p_config->pulse_period_us / p_config->pulse_width_us) || count <= 0)
     {
         return false;
     }
 
     pwm_stop(pwm_number);
-
-    if(count <= 0)
-    {
-        return false;
-    }
 
     p_config->pulse_count = count;
 
@@ -131,7 +126,9 @@ bool waveform_pulse_width_set(const uint32_t pwm_number, waveform_pwm_config_t *
         return false;
     }
 
-    if(width_us < WAVEFORM_WIDTH_US_MIN || width_us > WAVEFORM_WIDTH_US_MAX)
+    if(width_us < WAVEFORM_WIDTH_US_MIN ||
+       width_us > WAVEFORM_WIDTH_US_MAX ||
+       width_us * p_config->pulse_count > p_config->pulse_period_us)
     {
         return false;
     }
@@ -166,22 +163,17 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
      p_nrf_pwm->PSEL.OUT[0] = (p_config->pin << PWM_PSEL_OUT_PIN_Pos) |                         //pwm output pin
                               (PWM_PSEL_OUT_CONNECT_Connected << PWM_PSEL_OUT_CONNECT_Pos);     //pwm output connect
     
-    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
-    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PAD_VOLTAGE_PRESCALER << PWM_PRESCALER_PRESCALER_Pos);             //clock = 16MHz / 1 = 16MHz
-    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_Common << PWM_DECODER_LOAD_Pos) |
+    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up            << PWM_MODE_UPDOWN_Pos);
+    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled     << PWM_ENABLE_ENABLE_Pos);
+    p_nrf_pwm->PRESCALER  = (PAD_VOLTAGE_PRESCALER         << PWM_PRESCALER_PRESCALER_Pos);     //clock = 16MHz / 1 = 16MHz
+    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_Common       << PWM_DECODER_LOAD_Pos) |
                             (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
     p_nrf_pwm->COUNTERTOP = PAD_VOLTAGE_COUNTER_TOP;                                            //50KHz(period) = 16MHz(clock) / 320(COUNTER_TOP)
 
     p_nrf_pwm->SEQ[0].PTR = ((uint32_t)(&p_config->dma) << PWM_SEQ_PTR_PTR_Pos);
     p_nrf_pwm->SEQ[0].CNT = (1 << PWM_SEQ_CNT_CNT_Pos);
 
-    //period_ms = (REFRESH.CNT + 1) / period_Hz
-    //REFRESH.CNT = period_ms * period_Hz - 1
-    uint32_t refersh = (p_config->p_seq->period_ms > PAD_VOLTAGE_PERIOD_MS_MIN) ?
-                       p_config->p_seq->period_ms : PAD_VOLTAGE_PERIOD_MS_MIN;
-    refersh = refersh * PAD_VOLTAGE_HZ - 1;
-    p_nrf_pwm->SEQ[0].REFRESH   = (refersh << PWM_SEQ_REFRESH_CNT_Pos);
+    p_nrf_pwm->SEQ[0].REFRESH   = (PWM_SEQ_REFRESH_CNT_Continuous << PWM_SEQ_REFRESH_CNT_Pos);
     p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
     nrf_drv_ppi_channel_alloc(&pwm_ppi_channel[pwm_number]);
@@ -189,9 +181,8 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
 
     //sequence counter
     NRF_TIMER_Type* p_nrf_timer = p_config->counter;
-    p_nrf_timer->MODE           = (TIMER_MODE_MODE_Counter << TIMER_MODE_MODE_Pos);
+    p_nrf_timer->MODE           = (TIMER_MODE_MODE_Counter     << TIMER_MODE_MODE_Pos);
     p_nrf_timer->BITMODE        = (TIMER_BITMODE_BITMODE_32Bit << TIMER_BITMODE_BITMODE_Pos);
-    p_nrf_timer->PRESCALER      = (0 << TIMER_PRESCALER_PRESCALER_Pos);
     p_nrf_timer->TASKS_START    = true;
 
     nrf_drv_ppi_channel_alloc(&pad_seq_cnt_ppi_channel);
@@ -202,6 +193,8 @@ bool pad_voltage_pwm_init(const uint32_t pwm_number, const pad_voltage_pwm_confi
 
     sd_nvic_SetPriority(PWM1_IRQn, 6);
     sd_nvic_EnableIRQ(PWM1_IRQn);
+
+    return true;
 }
 
 bool pad_voltage_sequence_mode_set(pad_voltage_pwm_config_t * const p_config, const pwm_sequence_config_t * const p_seq_config)
@@ -215,17 +208,13 @@ bool pad_voltage_sequence_mode_set(pad_voltage_pwm_config_t * const p_config, co
 
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PAD_VOLTAGE_PWM_NUMBER);
 
-    uint32_t refersh = (p_config->p_seq->period_ms > PAD_VOLTAGE_PERIOD_MS_MIN) ?
-                       (p_config->p_seq->period_ms - 1) : PAD_VOLTAGE_PERIOD_MS_MIN;
-
-    p_nrf_pwm->SEQ[0].REFRESH   = (refersh << PWM_SEQ_REFRESH_CNT_Pos);
-    p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
-
     p_config->p_seq =  (pwm_sequence_config_t *)p_seq_config;
 
     p_config->counter->TASKS_CLEAR = true;
 
     pwm_start(PAD_VOLTAGE_PWM_NUMBER);
+
+    return true;
 }
 
 void pad_voltage_up(board_state * const p_board)
@@ -264,16 +253,10 @@ bool pad_voltage_sequence_period_set(pad_voltage_pwm_config_t * const p_config, 
     {
         return false;
     }
-
-    pwm_stop(PAD_VOLTAGE_PWM_NUMBER);
     
     p_config->p_seq->period_ms = period_ms;
 
-    NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(PAD_VOLTAGE_PWM_NUMBER);
-
-    p_nrf_pwm->SEQ[0].REFRESH = ((period_ms - 1) << PWM_SEQ_REFRESH_CNT_Pos);
-
-    pwm_start(PAD_VOLTAGE_PWM_NUMBER);
+    p_config->counter->TASKS_CLEAR = true;
     
     return true;
 }
@@ -347,15 +330,15 @@ bool peltier_pwm_init(const uint32_t pwm_number, const peltier_pwm_config_t * co
     pwm_seq0[pwm_number][1] = p_config->period_us | PWM_POLARITY_ACTIVE_LOW;
     pwm_seq0[pwm_number][3] = p_config->period_us;
 
-    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
-    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_16 << PWM_PRESCALER_PRESCALER_Pos);         //clock = 16MHz / 16 = 1MHz
-    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm << PWM_DECODER_LOAD_Pos) |
-                            (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
+    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up             << PWM_MODE_UPDOWN_Pos);
+    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled      << PWM_ENABLE_ENABLE_Pos);
+    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_16 << PWM_PRESCALER_PRESCALER_Pos);        //clock = 16MHz / 16 = 1MHz
+    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm      << PWM_DECODER_LOAD_Pos) |
+                            (PWM_DECODER_MODE_RefreshCount  << PWM_DECODER_MODE_Pos);
 
     p_nrf_pwm->SEQ[0].PTR       = ((uint32_t)(pwm_seq0[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
     p_nrf_pwm->SEQ[0].CNT       = (ARRAY_SIZE(pwm_seq0[pwm_number]) << PWM_SEQ_CNT_CNT_Pos);
-    p_nrf_pwm->SEQ[0].REFRESH   = (PWM_SEQ_REFRESH_CNT_Continuous << PWM_SEQ_REFRESH_CNT_Pos);
+    p_nrf_pwm->SEQ[0].REFRESH   = (PWM_SEQ_REFRESH_CNT_Continuous   << PWM_SEQ_REFRESH_CNT_Pos);
     p_nrf_pwm->SEQ[0].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
     nrf_drv_ppi_channel_alloc(&pwm_ppi_channel[pwm_number]);
@@ -463,7 +446,7 @@ bool waveform_single_shot(const uint32_t count)
 bool pwm_start(const uint32_t pwm_number)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
-    if(p_nrf_pwm == NULL ||
+    if((p_nrf_pwm == NULL)                         ||
       !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) ||
       pwm_is_running[pwm_number])
     {
@@ -481,7 +464,7 @@ bool pwm_start(const uint32_t pwm_number)
 bool pwm_stop(const uint32_t pwm_number)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
-    if(p_nrf_pwm == NULL ||
+    if((p_nrf_pwm == NULL)                          ||
        !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) ||
        !pwm_is_running[pwm_number])
     {

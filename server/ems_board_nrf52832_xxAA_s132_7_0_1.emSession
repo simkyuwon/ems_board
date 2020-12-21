@@ -1,9 +1,7 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints" active_group="Breakpoints">
-  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
- </Breakpoints>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
  <ExecutionProfileWindow/>
  <FrameBufferWindow>
   <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
@@ -27,8 +25,10 @@
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Application"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Mesh stack"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Model"/>
+  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;nRF5 SDK"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Other"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Provisioning"/>
+  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;SEGGER RTT"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ems_board_nrf52832" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -50,7 +50,7 @@
  </TraceWindow>
  <Watch1>
   <Watches active="1" update="Never">
-   <Watchpoint expression="NRF_PWM0" name="NRF_PWM0" radix="16" linenumber="369" filename="src/main.c"/>
+   <Watchpoint expression="NRF_PWM0" name="NRF_PWM0" radix="16" linenumber="410" filename="src/main.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -63,7 +63,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="11" y="127" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/app_ems_board.c" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="109" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="53" y="526" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="34" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="65" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/ems_pwm.h" selected="0" top="43" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="25" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_messages.h" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="ReleaseWithDebugInformation" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

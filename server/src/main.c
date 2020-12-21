@@ -79,7 +79,7 @@
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
-#define APP_EMS_PWM_ELEMENT_INDEX   (0)
+#define APP_EMS_PWM_ELEMENT_INDEX   (1)
 
 /* Controls if the model instance should force all mesh messages to be segmented messages. */
 #define APP_FORCE_SEGMENTATION      (false)
@@ -102,16 +102,17 @@ static void pad_voltage_control(void);
  *****************************************************************************/
 static board_state ems_board;
 
-static const uint16_t origin_normal_sequence[] = {100};                                                                 //voltage pwm form
-static const uint16_t origin_sin_sequence[] = {0, 17, 34, 50, 64, 76, 86, 93, 98, 100, 98, 93, 86, 76, 64, 50, 34, 17}; 
-static const uint16_t origin_test_sequence[] = {85, 93, 98, 100, 100, 100, 100, 0, 0, 0, 0, 0, 0, 0};
+static bool m_device_provisioned;
+
+static const uint16_t origin_normal_sequence[] =  {100};                                                                   //voltage pwm form
+static const uint16_t origin_sin_sequence[] =     {  0,  17,  34,  50,  64,  76,  86,  93,  98, 100,  98,  93,  86,  76,  64,  50,  34,  17}; 
+static const uint16_t origin_test_sequence[] =    { 85,  93,  98, 100, 100, 100,   0,   0,   0,   0,   0,   0,   0,   0};
 
 static const pwm_sequence_config_t m_normal_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_normal_sequence, //pwm form
                                                                                       1000);                  //period per step(ms)
 static const pwm_sequence_config_t m_sin_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_sin_sequence, 500);
-static const pwm_sequence_config_t m_test_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_test_sequence, 200);
+static const pwm_sequence_config_t m_test_pwm_sequence_config = PWM_SEQUENCE_CONFIG(origin_test_sequence, 250);
 
-static bool m_device_provisioned;
 static pwm_sequence_config_t m_pwm_sequence_config[] = { m_normal_pwm_sequence_config,
                                                          m_sin_pwm_sequence_config,
                                                          m_test_pwm_sequence_config};
@@ -129,7 +130,7 @@ static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000, PELT
 static saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
                                                                             NRF_SAADC_GAIN1_6,             //gain 1/6
                                                                             NRF_SAADC_REFERENCE_INTERNAL,  //reference internal(0.6V) 
-                                                                            NRF_SAADC_ACQTIME_5US,         //acquisition time 5us, maximum source resistance 50kOhm
+                                                                            NRF_SAADC_ACQTIME_5US,         //acquisition time 5us, maximum source resistance 40kOhm
                                                                             PAD_VOLTAGE_ANALOG_PIN);       //analog input(P) pin
 static saadc_config_t m_peltier_voltage_saadc_config = PELTIER_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_VDD1_2,     //resistor VDD/2
                                                                                     NRF_SAADC_GAIN1_6,             //gain 1/6
@@ -154,16 +155,16 @@ static led_config_t m_blue_led_config   = LED_STATE_CONFIG(BLUE_LED,    //gpio p
 static led_config_t m_white_led_config  = LED_STATE_CONFIG(WHITE_LED, CATHODE);
 
 APP_EMS_PWM_SERVER_DEF(m_ems_server,
-                      APP_FORCE_SEGMENTATION,
-                      APP_MIC_SIZE,
-                      app_ems_server_set_cb,
-                      app_ems_server_get_cb)
+                       APP_FORCE_SEGMENTATION,
+                       APP_MIC_SIZE,
+                       app_ems_server_set_cb,
+                       app_ems_server_get_cb)
 /*************************************************************************************************/
 
 static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "SET)command : %x,  position : %u, data : %d\n", command, position, data);
-    if(position & (1 << ems_board.position))
+    if(position & (1 << ems_board.position))          //check position(ems_board.position == dip switch state)
     {
         if(ems_board.control_mode == BUTTON_CONTROL)
         {
@@ -396,7 +397,7 @@ static void mode_button_callback(void)
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "PUSH\n");
         uint32_t sequence_size = ARRAY_SIZE(m_pwm_sequence_config);
-        uint32_t sequence_index = (m_voltage_pwm_config.p_seq - m_pwm_sequence_config + 1) % sequence_size;
+        uint32_t sequence_index = (m_voltage_pwm_config.p_seq - m_pwm_sequence_config + 1) % sequence_size; //calculate next mode index
         pad_voltage_sequence_mode_set(&m_voltage_pwm_config, &m_pwm_sequence_config[sequence_index]);
     }
 }
@@ -412,7 +413,8 @@ static void gpio_init(void)
     dip_switch_gpio_init(DIP_SWITCH_1);
     dip_switch_gpio_init(DIP_SWITCH_2);
 
-    gpio_config_t white_led_gpio_config = LED_GPIO_CONFIG(WHITE_LED, GPIO_PIN_CNF_PULL_Pullup);
+    gpio_config_t white_led_gpio_config = LED_GPIO_CONFIG(WHITE_LED,                          //gpio pin number
+                                                          GPIO_PIN_CNF_PULL_Pullup);          //internal register
     gpio_config_t blue_led_gpio_config  = LED_GPIO_CONFIG(BLUE_LED, GPIO_PIN_CNF_PULL_Pullup);
     gpio_pin_init(&white_led_gpio_config);
     gpio_pin_init(&blue_led_gpio_config);
@@ -478,7 +480,7 @@ static void start(void)
     {
         ems_board.position = dip_state;
         read_dip_switch(&dip_state);
-    }while(ems_board.position != dip_state);
+    }while(ems_board.position != dip_state);  //save dip switch state
 }
 
 int main(void)
@@ -507,7 +509,7 @@ void PWM1_IRQHandler(void)//voltage pwm interrupt
 
             static double prev_target_voltage = -1;
             uint32_t seq_index = (m_voltage_pwm_config.counter->CC[0] * 1000 / PAD_VOLTAGE_HZ / m_voltage_pwm_config.p_seq->period_ms) % m_voltage_pwm_config.p_seq->seq_size;
-            double target_voltage = ems_board.pad_target_voltage * (double)m_voltage_pwm_config.p_seq->p_sequence[seq_index] / 100.0F;
+            double target_voltage = ems_board.pad_target_voltage * (double)m_voltage_pwm_config.p_seq->p_sequence[seq_index] / 100.0F;  //calculate target voltage
             
             if(prev_target_voltage > 0 && target_voltage == 0)      //pulse off
             {
@@ -532,13 +534,13 @@ void PWM1_IRQHandler(void)//voltage pwm interrupt
                 integral += (target_voltage - now_voltage) / 10000;
             }
 
-            MV += (target_voltage - now_voltage) * Kp;
+            MV += (target_voltage - now_voltage) * Kp;              //calculate manipulated variable
             MV -= (now_voltage - prev_voltage) * Kd;
             MV += integral * Ki;
 
             prev_comp += MV;
 
-            if((int32_t)prev_comp > PAD_VOLTAGE_COMP_MAX)
+            if((int32_t)prev_comp > PAD_VOLTAGE_COMP_MAX)           //check compare range
             {
                 prev_comp = PAD_VOLTAGE_COMP_MAX;
             }

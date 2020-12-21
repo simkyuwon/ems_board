@@ -10,12 +10,12 @@ int gpiote_config_init(const gpiote_config_t * const p_config, button_cb callbac
         return -1;
     }
 
-    NRF_GPIOTE->CONFIG[gpiote_count] = (p_config->mode << GPIOTE_CONFIG_MODE_Pos) |
-                                       (p_config->psel << GPIOTE_CONFIG_PSEL_Pos) |
-                                       (p_config->polarity << GPIOTE_CONFIG_POLARITY_Pos) |
-                                       (p_config->outinit << GPIOTE_CONFIG_OUTINIT_Pos);
+    NRF_GPIOTE->CONFIG[gpiote_count] = (p_config->mode     << GPIOTE_CONFIG_MODE_Pos)    |
+                                       (p_config->psel     << GPIOTE_CONFIG_PSEL_Pos)    |
+                                       (p_config->polarity << GPIOTE_CONFIG_POLARITY_Pos)|
+                                       (p_config->outinit  << GPIOTE_CONFIG_OUTINIT_Pos);
 
-    if(p_config->mode == GPIOTE_CONFIG_MODE_Event)//external interrupt from gpio
+    if(p_config->mode == GPIOTE_CONFIG_MODE_Event)  //external interrupt from gpio
     {
         NRF_GPIOTE->INTENSET                = (GPIOTE_INTENCLR_IN0_Enabled << gpiote_count);
         NRF_GPIOTE->EVENTS_IN[gpiote_count] = false;
@@ -42,7 +42,7 @@ bool button_event_init(uint32_t pin_number, button_cb callback)
         return false;
     }
 
-    sd_nvic_SetPriority(GPIOTE_IRQn, 6);
+    sd_nvic_SetPriority(GPIOTE_IRQn, 6);  //gpiote interrupt enable
     sd_nvic_EnableIRQ(GPIOTE_IRQn);
 
     return true;
@@ -52,11 +52,11 @@ void GPIOTE_IRQHandler(void)
 {
     for(uint32_t ch_num = 0; ch_num < GPIOTE_CH_NUM; ch_num++)
     {
-        if(NRF_GPIOTE->EVENTS_IN[ch_num])
+        if(NRF_GPIOTE->EVENTS_IN[ch_num])                   //check interrupt generated 
         {
             if(gpiote_event_config_array[ch_num].cb != NULL)
             {
-                gpiote_event_config_array[ch_num].cb();
+                gpiote_event_config_array[ch_num].cb();     //gpite interrupt callback function
             }
             NRF_GPIOTE->EVENTS_IN[ch_num] = 0;
         }

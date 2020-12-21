@@ -57,12 +57,12 @@
 
 typedef struct
 {
-    uint32_t pin_number;
-    nrf_gpio_pin_dir_t dir;
-    nrf_gpio_pin_input_t input;
-    nrf_gpio_pin_pull_t pull;
-    nrf_gpio_pin_drive_t drive;
-    nrf_gpio_pin_sense_t sense;
+    uint32_t              pin_number;
+    nrf_gpio_pin_dir_t    dir;
+    nrf_gpio_pin_input_t  input;
+    nrf_gpio_pin_pull_t   pull;
+    nrf_gpio_pin_drive_t  drive;
+    nrf_gpio_pin_sense_t  sense;
 }gpio_config_t;
 
 typedef enum

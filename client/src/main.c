@@ -72,7 +72,7 @@
 #include "nrf.h"
 #include "nrf_drv_usbd.h"
 #include "nrf_drv_clock.h"
-#include "nrf_gpio.h"
+//#include "nrf_gpio.h"
 #include "nrf_drv_power.h"
 #include "app_error.h"
 #include "app_util.h"
@@ -140,7 +140,7 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event);
 static ems_client_t m_clients[CLIENT_MODEL_INSTANCE_COUNT];
 static bool m_device_provisioned;
 //USB CDC ACM
-static uint16_t   m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;
+static uint16_t m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;
 static char m_cdc_tx_buffer[CDC_ACM_BUFFER_SIZE];
 static char m_cdc_rx_buffer[CDC_ACM_BUFFER_SIZE];
 static bool m_usb_connected = false;
@@ -443,7 +443,6 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event)
     }
 }
 
-
 static void start(void)
 {
     if (!m_device_provisioned)
@@ -482,6 +481,32 @@ static void idle_state_handle(void)
 {
     power_manage();
 }
+
+static uint32_t set_model_publish_address(uint16_t publish_address, access_model_handle_t model_handle) 
+{  
+    uint32_t status;
+    dsm_handle_t publish_address_handle = DSM_HANDLE_INVALID;
+    access_model_publish_address_get(model_handle, &publish_address_handle);
+    if(publish_address_handle != DSM_HANDLE_INVALID)
+    {
+        NRF_MESH_ASSERT(dsm_address_publish_remove(publish_address_handle) == NRF_SUCCESS);
+    }
+    else
+    {
+        
+
+    }
+    status = dsm_address_publish_add(publish_address, &publish_address_handle);
+    if (status != NRF_SUCCESS)
+    {
+        return status;
+    } 
+    else
+    {
+        return access_model_publish_address_set(model_handle, publish_address_handle);
+    }
+    return -1;
+} 
 
 int main(void)
 {

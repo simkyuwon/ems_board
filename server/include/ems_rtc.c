@@ -35,11 +35,11 @@ static uint32_t rtc2_start(void)
 {
     if(rtc2_using_count == 0)//first event
     {
-        rtc2_overflow_count = 0;
+        rtc2_overflow_count     = 0;
         NRF_RTC2->EVENTS_OVRFLW = false;
-        NRF_RTC2->TASKS_CLEAR = true;
+        NRF_RTC2->TASKS_CLEAR   = true;
         while(NRF_RTC2->COUNTER);
-        NRF_RTC2->TASKS_START = true;
+        NRF_RTC2->TASKS_START   = true;
     }
     ++rtc2_using_count;
     return rtc2_counter_get();
@@ -82,9 +82,8 @@ static int32_t alloc_compare_channel(rtc_cb p_cb, void * p_args)
     {
         if(rtc2_compare_cb[idx] == NULL)
         {
-            rtc2_compare_cb[idx] = p_cb;
+            rtc2_compare_cb[idx]      = p_cb;
             rtc2_compare_cb_args[idx] = p_args;
-            rtc2_start();
             return idx;
         }
     }
@@ -100,13 +99,13 @@ bool rtc2_interrupt(uint32_t delay_ms, rtc_cb p_cb, void * p_args)
         return false;
     }
 
-    uint32_t now_counter = rtc2_counter_get();
-    delay_ms = (delay_ms < RTC2_CC_DELAY_MIN) ? RTC2_CC_DELAY_MIN : delay_ms;
+    delay_ms = (delay_ms < RTC2_CC_DELAY_MIN) ? RTC2_CC_DELAY_MIN : delay_ms; //check minimum delay
 
     NRF_RTC2->EVENTS_COMPARE[channel_num] = 0;
     NRF_RTC2->INTENSET                    = (RTC_INTENSET_COMPARE0_Set << (RTC_INTENSET_COMPARE0_Pos + channel_num));
 
-    NRF_RTC2->CC[channel_num] = now_counter + RTC2_MS_TO_CLOCK(delay_ms);
+    uint32_t now_counter = rtc2_start();
+    NRF_RTC2->CC[channel_num] = now_counter + RTC2_MS_TO_CLOCK(delay_ms);     //calculate compare value
 
     return true;
 }
@@ -119,11 +118,12 @@ void RTC2_IRQHandler(void)
         {
             NRF_RTC2->INTENCLR                = (RTC_INTENCLR_COMPARE0_Clear << (RTC_INTENCLR_COMPARE0_Pos + ch_num));
             NRF_RTC2->EVENTS_COMPARE[ch_num]  = false;
+
             rtc_cb p_func = rtc2_compare_cb[ch_num];
             void * p_args = rtc2_compare_cb_args[ch_num];
-            rtc2_compare_cb[ch_num]           = NULL;
+            rtc2_compare_cb[ch_num]           = NULL;     //init callback function array
             rtc2_compare_cb_args[ch_num]      = NULL;
-            p_func(p_args);
+            p_func(p_args);                               //run callback function
             rtc2_stop();
         }
     }
