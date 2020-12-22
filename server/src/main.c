@@ -86,7 +86,7 @@
 /* Controls the MIC size used by the model instance for sending the mesh messages. */
 #define APP_MIC_SIZE                (NRF_MESH_TRANSMIC_SIZE_SMALL)
 
-#define PWM_NORMAL_SEQUENCE_NUMBER  (0)
+#define PWM_NORMAL_SEQUENCE_NUMBER  (0)//pwm_sequence_config_t array(m_pwm_sequence_config) index
 #define PWM_SIN_SEQUENCE_NUMBER     (1)
 #define PWM_TEST_SEQUENCE_NUMBER    (2)
 
@@ -124,7 +124,7 @@ static waveform_pwm_config_t m_waveform_pwm_config =  WAVEFORM_PWM_CONFIG(44000,
                                                                           PAD_RIGHT_PWM_PIN);   //pwm output pin
 static pad_voltage_pwm_config_t m_voltage_pwm_config = PAD_VOLTAGE_PWM_CONFIG(PAD_VOLTAGE_PWM_PIN,                                //pwm output pin
                                                                               &m_pwm_sequence_config[PWM_NORMAL_SEQUENCE_NUMBER], //pwm form
-                                                                              NRF_TIMER4);                                        //sequence counter
+                                                                              NRF_TIMER4);                                        //period counter for calculating sequence index
 static peltier_pwm_config_t m_peltier_pwm_config = PELTIER_PWM_CONFIG(1000, PELTIER_HEATING_PWM_PIN, PELTIER_COOLING_PWM_PIN);
 
 static saadc_config_t m_pad_voltage_saadc_config = PAD_VOLTAGE_SAADC_CONFIG(NRF_SAADC_RESISTOR_DISABLED,   //resistor bypass
@@ -151,7 +151,7 @@ static saadc_config_t m_temperature_vin_saadc_config = TEMPERATURE_VIN_SAADC_CON
                                                                                     TEMPERATURE_ANALOG_VIN_PIN);    //analog input(P) pin
 
 static led_config_t m_blue_led_config   = LED_STATE_CONFIG(BLUE_LED,    //gpio pin number
-                                                           CATHODE);    //mcu connected pin type
+                                                           CATHODE);    //connected pin type
 static led_config_t m_white_led_config  = LED_STATE_CONFIG(WHITE_LED, CATHODE);
 
 APP_EMS_PWM_SERVER_DEF(m_ems_server,
@@ -171,6 +171,7 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
             if(command == CMD_CONTROL_BLE)
             {
                 ble_control_mode(&ems_board);
+                led_state_set(&m_blue_led_config, LED_ON);
             }
         }
         else if(ems_board.control_mode == BLE_CONTROL)
@@ -179,9 +180,7 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
             {
                 case CMD_CONTROL_BUTTON:
                     button_control_mode(&ems_board);
-                    break;
-                case CMD_CONTROL_BLE:
-                    ble_control_mode(&ems_board);
+                    led_state_set(&m_blue_led_config, LED_OFF);
                     break;
 
                 case CMD_WAVEFORM_START:

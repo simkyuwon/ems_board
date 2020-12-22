@@ -42,15 +42,14 @@ bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * 
     pwm_seq0[pwm_number][3] = p_config->pulse_width_us;
    
     //pulse waiting part
-    pwm_seq1[pwm_number][0] = p_config->pulse_width_us | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq1[pwm_number][1] = p_config->pulse_width_us | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq1[pwm_number][3] = p_config->pulse_width_us;
+    pwm_seq1[pwm_number][3] = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / PWM_COMPARE_Msk + 1;
+    pwm_seq1[pwm_number][0] = pwm_seq1[pwm_number][1] = PWM_NO_OUTPUT_COMPARE;
 
-    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up            << PWM_MODE_UPDOWN_Pos);
-    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled     << PWM_ENABLE_ENABLE_Pos);
-    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_1 << PWM_PRESCALER_PRESCALER_Pos);       //clock = 16MHz / 1 = 16MHz
-    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm     << PWM_DECODER_LOAD_Pos) |
-                            (PWM_DECODER_MODE_RefreshCount << PWM_DECODER_MODE_Pos);
+    p_nrf_pwm->MODE       = (PWM_MODE_UPDOWN_Up             << PWM_MODE_UPDOWN_Pos);
+    p_nrf_pwm->ENABLE     = (PWM_ENABLE_ENABLE_Enabled      << PWM_ENABLE_ENABLE_Pos);
+    p_nrf_pwm->PRESCALER  = (PWM_PRESCALER_PRESCALER_DIV_16 << PWM_PRESCALER_PRESCALER_Pos);      //clock = 16MHz / 16 = 1MHz
+    p_nrf_pwm->DECODER    = (PWM_DECODER_LOAD_WaveForm      << PWM_DECODER_LOAD_Pos) |
+                            (PWM_DECODER_MODE_RefreshCount  << PWM_DECODER_MODE_Pos);
     p_nrf_pwm->LOOP       = (1 << PWM_LOOP_CNT_Pos);                                              //LOOP(SEQ[0] -> SEQ[1]) -> ppi -> (SEQ[0] ...
 
     p_nrf_pwm->SEQ[0].PTR       = ((uint32_t)(pwm_seq0[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
@@ -60,8 +59,7 @@ bool waveform_pwm_init(const uint32_t pwm_number, waveform_pwm_config_t const * 
  
     p_nrf_pwm->SEQ[1].PTR       = ((uint32_t)(pwm_seq1[pwm_number]) << PWM_SEQ_PTR_PTR_Pos);
     p_nrf_pwm->SEQ[1].CNT       = (ARRAY_SIZE(pwm_seq1[pwm_number]) << PWM_SEQ_CNT_CNT_Pos);
-    //wating part count = (pwm period count = pwm period / pwm 1 pulse width) - output part count
-    p_nrf_pwm->SEQ[1].REFRESH   = (((p_config->pulse_period_us / p_config->pulse_width_us) - (p_nrf_pwm->SEQ[0].REFRESH + 1) - 1) << PWM_SEQ_REFRESH_CNT_Pos);
+    p_nrf_pwm->SEQ[1].REFRESH   = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / pwm_seq1[pwm_number][3];
     p_nrf_pwm->SEQ[1].ENDDELAY  = (0 << PWM_SEQ_ENDDELAY_CNT_Pos);
 
     nrf_drv_ppi_channel_alloc(&pwm_ppi_channel[pwm_number]);
@@ -86,8 +84,10 @@ bool waveform_pulse_count_set(const uint32_t pwm_number, waveform_pwm_config_t *
 
     p_config->pulse_count = count;
 
+    pwm_seq1[pwm_number][3] = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / PWM_COMPARE_Msk + 1;
+
     p_nrf_pwm->SEQ[0].REFRESH = ((p_config->pulse_count - 1) << PWM_SEQ_REFRESH_CNT_Pos);
-    p_nrf_pwm->SEQ[1].REFRESH = (((p_config->pulse_period_us / p_config->pulse_width_us) - (p_nrf_pwm->SEQ[0].REFRESH + 1) - 1) << PWM_SEQ_REFRESH_CNT_Pos);
+    p_nrf_pwm->SEQ[1].REFRESH = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / pwm_seq1[pwm_number][3];
 
     pwm_start(pwm_number);
 
@@ -111,7 +111,9 @@ bool waveform_pulse_period_set(const uint32_t pwm_number, waveform_pwm_config_t 
 
     p_config->pulse_period_us = period_us;
 
-    p_nrf_pwm->SEQ[1].REFRESH = (((p_config->pulse_period_us / p_config->pulse_width_us) - (p_nrf_pwm->SEQ[0].REFRESH + 1) - 1) << PWM_SEQ_REFRESH_CNT_Pos);
+    pwm_seq1[pwm_number][3] = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / PWM_COMPARE_Msk + 1;
+
+    p_nrf_pwm->SEQ[1].REFRESH = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / pwm_seq1[pwm_number][3];
 
     pwm_start(pwm_number);
 
@@ -141,11 +143,9 @@ bool waveform_pulse_width_set(const uint32_t pwm_number, waveform_pwm_config_t *
     pwm_seq0[pwm_number][1] = (p_config->pulse_width_us / 2) | PWM_POLARITY_ACTIVE_HIGH;
     pwm_seq0[pwm_number][3] = p_config->pulse_width_us;
 
-    pwm_seq1[pwm_number][0] = p_config->pulse_width_us | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq1[pwm_number][1] = p_config->pulse_width_us | PWM_POLARITY_ACTIVE_LOW;
-    pwm_seq1[pwm_number][3] = p_config->pulse_width_us;
+    pwm_seq1[pwm_number][3] = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / PWM_COMPARE_Msk + 1;
 
-    p_nrf_pwm->SEQ[1].REFRESH = (((p_config->pulse_period_us / p_config->pulse_width_us) - (p_nrf_pwm->SEQ[0].REFRESH + 1) - 1) << PWM_SEQ_REFRESH_CNT_Pos);
+    p_nrf_pwm->SEQ[1].REFRESH = (p_config->pulse_period_us - p_config->pulse_count * p_config->pulse_width_us) / pwm_seq1[pwm_number][3];
 
     pwm_start(pwm_number);
 

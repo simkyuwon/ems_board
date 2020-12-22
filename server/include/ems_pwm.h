@@ -10,8 +10,6 @@
 #include "nrf_drv_pwm.h"
 #include "nrf_drv_ppi.h"
 
-#define PWM_NOPIN         (0xFFFFFFFF)
-
 #define WAVEFORM_PWM_CHANNELS_PER_INSTANCE  (2)
 #define PELTIER_PWM_CHANNELS_PER_INSTANCE   (2)
 
@@ -51,6 +49,8 @@
 #define PWM_POLARITY_Msk        (0x8000UL)
 #define PWM_COMPARE_Msk         (0x7FFFUL)
 
+#define PWM_NO_OUTPUT_COMPARE   (0x7FFFUL)
+
 #define PWM_PIN_NOT_CONNECTED   (0x1FUL)
 
 #define WAVEFORM_WIDTH_US_MAX   (1000UL)
@@ -74,8 +74,8 @@
 
 typedef enum
 {
-    PWM_POLARITY_ACTIVE_LOW = 0U,
-    PWM_POLARITY_ACTIVE_HIGH = 1U << 15,
+    PWM_POLARITY_ACTIVE_LOW = 0U,         //first edge within the PWM period is rising edge
+    PWM_POLARITY_ACTIVE_HIGH = 1U << 15,  //first edge within the PWM period is falling edge
 }pwm_polarity_t;
 
 typedef struct
