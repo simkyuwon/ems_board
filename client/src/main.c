@@ -167,9 +167,14 @@ static void app_ems_client_response_cb(const ems_client_t *p_self,
                                        const access_message_rx_meta_t *p_meta,
                                        const ems_response_params_t *p_in)
 {
-   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "temperature : %d\n", p_in->data);
-   sprintf(m_cdc_tx_buffer, "temperature : %d\n\r", p_in->data);
-   app_usbd_cdc_acm_write(&m_app_cdc_acm, m_cdc_tx_buffer, strlen(m_cdc_tx_buffer));
+    switch(p_in->message_type)
+    {
+        case CMD_GET_TEMPERATURE:
+            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "temperature : %d\n", p_in->data);
+            sprintf(m_cdc_tx_buffer, "temperature : %d\n\r", p_in->data);
+            app_usbd_cdc_acm_write(&m_app_cdc_acm, m_cdc_tx_buffer, strlen(m_cdc_tx_buffer));
+            break;
+    }
 }
 
 static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self)
@@ -379,26 +384,30 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 
                         if(!cdc_rx_buffer_overflow)
                         {
-                            if(m_cdc_rx_buffer[0] == 'G')
+                            uint32_t message_type;
+                            sscanf(m_cdc_rx_buffer, "%d", &message_type);
+                                
+                            if(GET_MESSAGE(message_type))
                             {
                                 ems_get_params_t get_params = {0};
+                                sscanf(m_cdc_rx_buffer, "%d", &get_params.message_type);
                                 get_params.tid = tid++;
-
                                 ems_client_get(&m_clients[0], &get_params);
                             }
                             else
                             {
                                 ems_set_params_t set_params = {0};
-
-                                sscanf(m_cdc_rx_buffer, "%d", &set_params.message_type);
-                                if(!NOTICE_MESSAGE(set_params.message_type))
+                                if(NOTICE_MESSAGE(message_type))
                                 {
-                                    sscanf(m_cdc_rx_buffer, "%*d %hhu %d", &set_params.position, &set_params.data); 
+                                    sscanf(m_cdc_rx_buffer, "%d", &set_params.message_type); 
                                 }
-
+                                else
+                                {
+                                    sscanf(m_cdc_rx_buffer, "%d %hhu %d", &set_params.message_type, &set_params.position, &set_params.data); 
+                                }
                                 set_params.tid = tid++;
                                 ems_client_set(&m_clients[0], &set_params);
-                            }
+                            }                            
                         }
 
                         rx_buffer_index = 0;

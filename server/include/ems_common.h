@@ -23,7 +23,8 @@ typedef struct
 
 typedef struct
 {
-    int32_t data;
+    ems_msg_type_t  message_type;
+    int32_t         data;
 }ems_response_params_t;
 
 typedef struct

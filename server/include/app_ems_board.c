@@ -23,6 +23,7 @@ static void ems_state_get_cb(const ems_server_t * p_self,
 {
     app_ems_server_t * p_app = PARENT_BY_FIELD_GET(app_ems_server_t, server, p_self);
 
+    p_out->message_type = p_in->message_type;
     p_app->ems_get_cb(p_in->message_type, &p_out->data);
 }
 

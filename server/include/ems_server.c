@@ -36,7 +36,8 @@ static uint32_t data_send(ems_server_t * p_server,
 {
     ems_response_msg_pkt_t msg_pkt;
 
-    msg_pkt.data  = p_params->data;
+    msg_pkt.message_type  = p_params->message_type;
+    msg_pkt.data          = p_params->data;
 
     access_message_tx_t reply = {
         .opcode           = ACCESS_OPCODE_SIG(EMS_OPCODE_RESPONSE),
@@ -95,9 +96,9 @@ static void handle_set(access_model_handle_t model_handle, const access_message_
 
 static void handle_get(access_model_handle_t model_handle, const access_message_rx_t * p_rx_msg, void * p_args)
 {
-    ems_server_t * p_server   = (ems_server_t *) p_args;
-    ems_get_params_t in_data = {0};
-    ems_response_params_t out_data = {0};
+    ems_server_t * p_server         = (ems_server_t *) p_args;
+    ems_get_params_t in_data        = {0};
+    ems_response_params_t out_data  = {0};
 
     if(p_rx_msg->length == EMS_GET_COMMAND_MESSAGE_LEN)
     {

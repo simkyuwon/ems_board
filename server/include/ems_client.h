@@ -2,6 +2,8 @@
 #define EMS_CLIENT_H__
 
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include "access.h"
 #include "access_reliable.h"
 

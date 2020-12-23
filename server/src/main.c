@@ -254,8 +254,12 @@ static void app_ems_server_set_cb(const ems_msg_type_t command, uint8_t position
 
 static void app_ems_server_get_cb(const ems_msg_type_t command, int32_t * const p_data)
 {
-    *p_data  = (int32_t)(temperature_get(m_temperature_sensor_saadc_config.channel_num, m_temperature_vin_saadc_config.channel_num) * 1000.0F);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GET cb %d\n", *p_data);
+    switch(command)
+    {
+        case CMD_GET_TEMPERATURE:
+            *p_data  = (int32_t)(temperature_get(m_temperature_sensor_saadc_config.channel_num, m_temperature_vin_saadc_config.channel_num) * 1000.0F);
+            break;
+    }
 }
 
 static void app_model_init(void)

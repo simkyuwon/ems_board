@@ -1,8 +1,6 @@
 #include "ems_client.h"
 #include "model_common.h"
 
-#include <stddef.h>
-#include <string.h>
 #include "access_config.h"
 #include "nrf_mesh_assert.h"
 #include "nrf_mesh_utils.h"
@@ -38,7 +36,8 @@ static void response_handle(access_model_handle_t handle,
     {
         ems_response_msg_pkt_t * p_msg_params_packed = (ems_response_msg_pkt_t *) p_rx_msg->p_data;
 
-        in_data.data = p_msg_params_packed->data;
+        in_data.data          = p_msg_params_packed->data;
+        in_data.message_type  = p_msg_params_packed->message_type;
 
         p_client->settings.p_callbacks->ems_response_cb(p_client,
                                                         &p_rx_msg->meta_data,

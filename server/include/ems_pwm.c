@@ -451,7 +451,7 @@ bool pwm_start(const uint32_t pwm_number)
         p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);
 
         p_nrf_pwm->EVENTS_STOPPED = false;
-        p_nrf_pwm->TASKS_STOP = 1;
+        p_nrf_pwm->TASKS_STOP     = 1;
         while(!p_nrf_pwm->EVENTS_STOPPED);
     }
 

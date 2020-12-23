@@ -13,6 +13,7 @@
 #define EMS_RESPONSE_MESSAGE_LEN      (sizeof(ems_response_msg_pkt_t))
 
 #define NOTICE_MESSAGE(msg_type)      ((msg_type) & 0x8000)
+#define GET_MESSAGE(msg_type)         ((msg_type) & 0x4000)
 
 typedef enum
 {
@@ -42,6 +43,7 @@ typedef enum
     //CMD_VOLTAGE_PERIOD_SET = 100,
     //CMD_VOLTAGE_DUTY_SET,
     //CMD_VOLTAGE_COMP_SET,
+    CMD_GET_TEMPERATURE           = 0x4000,
 
     NOTICE_PORT_OPEN              = 0x8000,
     NOTICE_PORT_CLOSE,
@@ -71,6 +73,7 @@ typedef struct __attribute((packed))
 
 typedef struct __attribute((packed))
 {
+    ems_msg_type_t  message_type;
     int32_t         data;
 }ems_response_msg_pkt_t;
 
