@@ -6,7 +6,7 @@ static nrf_ppi_channel_t pad_seq_cnt_ppi_channel;
 static uint16_t pwm_seq0[3][4];
 static uint16_t pwm_seq1[3][4];
 
-static bool pwm_is_running[3] = {false, false, false};
+static pwm_state_t pwm_state[3] = {OFF, OFF, OFF};
 
 static NRF_PWM_Type* nrf_pwm_base(const uint32_t pwm_number)
 {
@@ -422,23 +422,16 @@ bool waveform_single_shot(const uint32_t count)
         return false;
     }
 
-    if(pwm_is_running[pwm_number])
+    if(pwm_state[pwm_number] == ON)
     {
         pwm_stop(pwm_number);
     }
 
+    pwm_state[pwm_number] = SINGLE_SHOT;
+
     p_nrf_pwm->LOOP               = (count << PWM_LOOP_CNT_Pos);
     p_nrf_pwm->EVENTS_LOOPSDONE   = false;
     p_nrf_pwm->TASKS_SEQSTART[0]  = true;
-
-    while(!p_nrf_pwm->EVENTS_LOOPSDONE);
-
-    p_nrf_pwm->EVENTS_STOPPED     = false;
-    p_nrf_pwm->TASKS_STOP         = true;
-
-    while(!p_nrf_pwm->EVENTS_STOPPED);
-
-    p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);
 
     return true;
 }
@@ -446,16 +439,25 @@ bool waveform_single_shot(const uint32_t count)
 bool pwm_start(const uint32_t pwm_number)
 {
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
-    if((p_nrf_pwm == NULL)                         ||
-      !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) ||
-      pwm_is_running[pwm_number])
+    if((p_nrf_pwm == NULL)                          ||
+       !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) ||
+       pwm_state[pwm_number] == ON)
     {
         return false;
     }
 
+    if(pwm_state[pwm_number] == SINGLE_SHOT)
+    {
+        p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);
+
+        p_nrf_pwm->EVENTS_STOPPED = false;
+        p_nrf_pwm->TASKS_STOP = 1;
+        while(!p_nrf_pwm->EVENTS_STOPPED);
+    }
+
     nrf_drv_ppi_channel_enable(pwm_ppi_channel[pwm_number]);
 
-    pwm_is_running[pwm_number]    = true;
+    pwm_state[pwm_number]         = ON;
     p_nrf_pwm->TASKS_SEQSTART[0]  = true;
 
     return true;
@@ -466,23 +468,23 @@ bool pwm_stop(const uint32_t pwm_number)
     NRF_PWM_Type* p_nrf_pwm = nrf_pwm_base(pwm_number);
     if((p_nrf_pwm == NULL)                          ||
        !(p_nrf_pwm->ENABLE & PWM_ENABLE_ENABLE_Msk) ||
-       !pwm_is_running[pwm_number])
+       pwm_state[pwm_number] == OFF)
     {
         return false;
     }
 
     nrf_drv_ppi_channel_disable(pwm_ppi_channel[pwm_number]);
 
-    p_nrf_pwm->EVENTS_STOPPED   = false;
-    p_nrf_pwm->TASKS_STOP       = true;
-    pwm_is_running[pwm_number]  = false;
+    p_nrf_pwm->EVENTS_STOPPED = false;
+    p_nrf_pwm->TASKS_STOP     = true;
+    pwm_state[pwm_number]     = OFF;
 
     while(!p_nrf_pwm->EVENTS_STOPPED);
 
     return true;
 }
 
-bool pwm_state_get(const uint32_t pwm_number)
+pwm_state_t pwm_state_get(const uint32_t pwm_number)
 {
-    return pwm_is_running[pwm_number];
+    return pwm_state[pwm_number];
 }

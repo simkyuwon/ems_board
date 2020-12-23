@@ -93,8 +93,8 @@
 /*****************************************************************************
  * Forward declaration of static functions
  *****************************************************************************/
-static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position);
-static void app_ems_server_get_cb(const ems_msg_type_t * p_command, int32_t * const p_data);
+static void app_ems_server_set_cb(const ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position);
+static void app_ems_server_get_cb(const ems_msg_type_t command, int32_t * const p_data);
 
 /*****************************************************************************
  * Static variables
@@ -160,7 +160,7 @@ APP_EMS_PWM_SERVER_DEF(m_ems_server,
                        app_ems_server_get_cb)
 /*************************************************************************************************/
 
-static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position)
+static void app_ems_server_set_cb(const ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "SET)command : %x,  position : %u, data : %d\n", command, position, data);
     *p_board_position = ems_board.position;
@@ -236,7 +236,7 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
                     ems_board.peltier_target_temperature = (double)data / 1000.0F;
                     break;
                 case CMD_PELTIER_TIMER_SET:
-                     if(pwm_state_get(PELTIER_PWM_NUMBER))
+                     if(pwm_state_get(PELTIER_PWM_NUMBER) == ON)
                      {
                         rtc2_interrupt((uint32_t)data, (void *)peltier_stop, NULL);
                      }
@@ -252,7 +252,7 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
     }
 }
 
-static void app_ems_server_get_cb(const ems_msg_type_t * p_command, int32_t * const p_data)
+static void app_ems_server_get_cb(const ems_msg_type_t command, int32_t * const p_data)
 {
     *p_data  = (int32_t)(temperature_get(m_temperature_sensor_saadc_config.channel_num, m_temperature_vin_saadc_config.channel_num) * 1000.0F);
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GET cb %d\n", *p_data);

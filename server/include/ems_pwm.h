@@ -73,9 +73,16 @@
 
 typedef enum
 {
-    PWM_POLARITY_ACTIVE_LOW = 0U,         //first edge within the PWM period is rising edge
-    PWM_POLARITY_ACTIVE_HIGH = 1U << 15,  //first edge within the PWM period is falling edge
+    PWM_POLARITY_ACTIVE_LOW   = 0U,        //first edge within the PWM period is rising edge
+    PWM_POLARITY_ACTIVE_HIGH  = 1U << 15,  //first edge within the PWM period is falling edge
 }pwm_polarity_t;
+
+typedef enum
+{
+    OFF = 0U,
+    ON,
+    SINGLE_SHOT,
+}pwm_state_t;
 
 typedef struct
 {
@@ -152,6 +159,6 @@ bool pwm_start(const uint32_t pwm_number);
 
 bool pwm_stop(const uint32_t pwm_number);
 
-bool pwm_state_get(const uint32_t pwm_number);
+pwm_state_t pwm_state_get(const uint32_t pwm_number);
 
 #endif
