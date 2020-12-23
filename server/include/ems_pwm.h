@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "ems_board.h"
-#include "nrf_drv_pwm.h"
 #include "nrf_drv_ppi.h"
 
 #define WAVEFORM_PWM_CHANNELS_PER_INSTANCE  (2)

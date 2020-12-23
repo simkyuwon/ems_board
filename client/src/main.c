@@ -72,7 +72,6 @@
 #include "nrf.h"
 #include "nrf_drv_usbd.h"
 #include "nrf_drv_clock.h"
-//#include "nrf_gpio.h"
 #include "nrf_drv_power.h"
 #include "app_error.h"
 #include "app_util.h"
@@ -127,6 +126,9 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
 static void app_ems_client_status_cb(const ems_client_t *p_self,
                                      const access_message_rx_meta_t *p_meta,
                                      const ems_status_params_t *p_in);
+static void app_ems_client_response_cb(const ems_client_t *p_self,
+                                       const access_message_rx_meta_t *p_meta,
+                                       const ems_response_params_t *p_in);
 static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self);
 static void app_ems_client_transaction_status_cb(access_model_handle_t model_handle,
                                                  void *p_args,
@@ -140,16 +142,16 @@ static void usbd_user_ev_handler(app_usbd_event_type_t event);
 static ems_client_t m_clients[CLIENT_MODEL_INSTANCE_COUNT];
 static bool m_device_provisioned;
 //USB CDC ACM
-static uint16_t m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - 3;
 static char m_cdc_tx_buffer[CDC_ACM_BUFFER_SIZE];
 static char m_cdc_rx_buffer[CDC_ACM_BUFFER_SIZE];
 static bool m_usb_connected = false;
 
 static const ems_client_callbacks_t client_cbs =
 {
-    .ems_status_cb = app_ems_client_status_cb,
-    .ack_transaction_status_cb = app_ems_client_transaction_status_cb,
-    .periodic_publish_cb = app_ems_client_publish_interval_cb
+    .ems_status_cb              = app_ems_client_status_cb,
+    .ems_response_cb            = app_ems_client_response_cb,
+    .ack_transaction_status_cb  = app_ems_client_transaction_status_cb,
+    .periodic_publish_cb        = app_ems_client_publish_interval_cb
 };
 
 static void app_ems_client_status_cb(const ems_client_t *p_self,
@@ -157,6 +159,17 @@ static void app_ems_client_status_cb(const ems_client_t *p_self,
                                      const ems_status_params_t *p_in)
 {
    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "position : %x, Acknowledged address : %x\n", p_in->board_position, p_meta->src.value);
+   sprintf(m_cdc_tx_buffer, "position : %x, Acknowledged address : %x\n\r", p_in->board_position, p_meta->src.value);
+   app_usbd_cdc_acm_write(&m_app_cdc_acm, m_cdc_tx_buffer, strlen(m_cdc_tx_buffer));
+}
+
+static void app_ems_client_response_cb(const ems_client_t *p_self,
+                                       const access_message_rx_meta_t *p_meta,
+                                       const ems_response_params_t *p_in)
+{
+   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "temperature : %d\n", p_in->data);
+   sprintf(m_cdc_tx_buffer, "temperature : %d\n\r", p_in->data);
+   app_usbd_cdc_acm_write(&m_app_cdc_acm, m_cdc_tx_buffer, strlen(m_cdc_tx_buffer));
 }
 
 static void app_ems_client_publish_interval_cb(access_model_handle_t handle, void *p_self)
@@ -237,10 +250,10 @@ static void models_init_cb(void)
 
     for (uint32_t i = 0; i < CLIENT_MODEL_INSTANCE_COUNT; ++i)
     {
-        m_clients[i].settings.p_callbacks = &client_cbs;
-        m_clients[i].settings.timeout = 0;
+        m_clients[i].settings.p_callbacks     = &client_cbs;
+        m_clients[i].settings.timeout         = 0;
         m_clients[i].settings.force_segmented = APP_FORCE_SEGMENTATION;
-        m_clients[i].settings.transmic_size = APP_MIC_SIZE;
+        m_clients[i].settings.transmic_size   = APP_MIC_SIZE;
        
         ERROR_CHECK(ems_client_init(&m_clients[i], i + 1));
     }
@@ -353,6 +366,7 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 
         case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
             {
+                bool cdc_rx_buffer_overflow = false;
                 do
                 {
                     app_usbd_cdc_acm_write(p_cdc_acm,  &m_cdc_rx_buffer[rx_buffer_index], READ_SIZE);
@@ -363,16 +377,29 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                     {
                         m_cdc_rx_buffer[rx_buffer_index] = '\0';
 
-                        ems_set_params_t set_params = {0};
-
-                        sscanf(m_cdc_rx_buffer, "%d", &set_params.message_type);
-                        if(!NOTICE_MESSAGE(set_params.message_type))
+                        if(!cdc_rx_buffer_overflow)
                         {
-                            sscanf(m_cdc_rx_buffer, "%*d %hhu %d", &set_params.position, &set_params.data); 
-                        }
+                            if(m_cdc_rx_buffer[0] == 'G')
+                            {
+                                ems_get_params_t get_params = {0};
+                                get_params.tid = tid++;
 
-                        set_params.tid = tid++;
-                        ems_client_set(&m_clients[0], &set_params);
+                                ems_client_get(&m_clients[0], &get_params);
+                            }
+                            else
+                            {
+                                ems_set_params_t set_params = {0};
+
+                                sscanf(m_cdc_rx_buffer, "%d", &set_params.message_type);
+                                if(!NOTICE_MESSAGE(set_params.message_type))
+                                {
+                                    sscanf(m_cdc_rx_buffer, "%*d %hhu %d", &set_params.position, &set_params.data); 
+                                }
+
+                                set_params.tid = tid++;
+                                ems_client_set(&m_clients[0], &set_params);
+                            }
+                        }
 
                         rx_buffer_index = 0;
                     }
@@ -381,6 +408,7 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                         rx_buffer_index += READ_SIZE;
                         if(rx_buffer_index >= CDC_ACM_BUFFER_SIZE)
                         {
+                            cdc_rx_buffer_overflow = true;
                             rx_buffer_index = 0;
                         }
                     }

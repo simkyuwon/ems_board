@@ -1,11 +1,8 @@
 #ifndef EMS_SAADC_H__
 #define EMS_SAADC_H__
 
-#include <stdbool.h>
-
 #include "nrf_drv_saadc.h"
 #include "ems_board.h"
-#include "ems_rtc.h"
 
 #define SAADC_CHANNEL_MAX_COUNT (8)
 #define SAMPLES_IN_BUFFER (32)

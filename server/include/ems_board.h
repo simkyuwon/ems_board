@@ -2,6 +2,8 @@
 #define EMS_BOARD_H__
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
 
 /* pin setting */
 

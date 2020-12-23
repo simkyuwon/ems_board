@@ -63,10 +63,11 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="56" y="244" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="214" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="48" y="80" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src/main.c" useBinaryEdit="0" left="0" path="../server/include/ems_client.c" selected="0" top="60" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="10" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/ems_client.c" useBinaryEdit="0" left="0" path="../server/include/ems_client.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="78" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/app_error_weak.c" selected="0" top="56" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="2" y="534" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="0" top="142" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="25" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../server/include/ems_common.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="45" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../server/include/ems_messages.h" selected="0" top="33" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../server/include/ems_client.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="48" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include/ems_client.c" useBinaryEdit="0" left="0" path="../server/include/ems_client.h" selected="1" top="21" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_dongle_client_nrf52840_xxAA_s140_7.0.1" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="ems_dongle_client_nrf52840_xxAA_s140_7.0.1" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/client/src" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

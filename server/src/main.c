@@ -93,9 +93,8 @@
 /*****************************************************************************
  * Forward declaration of static functions
  *****************************************************************************/
-static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data);
-static void app_ems_server_get_cb(const app_ems_server_t * p_server, uint8_t * p_position);
-static void pad_voltage_control(void);
+static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position);
+static void app_ems_server_get_cb(const ems_msg_type_t * p_command, int32_t * const p_data);
 
 /*****************************************************************************
  * Static variables
@@ -161,9 +160,10 @@ APP_EMS_PWM_SERVER_DEF(m_ems_server,
                        app_ems_server_get_cb)
 /*************************************************************************************************/
 
-static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data)
+static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int32_t data, uint8_t * const p_board_position)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "SET)command : %x,  position : %u, data : %d\n", command, position, data);
+    *p_board_position = ems_board.position;
     if(position & (1 << ems_board.position))          //check position(ems_board.position == dip switch state)
     {
         if(ems_board.control_mode == BUTTON_CONTROL)
@@ -252,9 +252,10 @@ static void app_ems_server_set_cb(ems_msg_type_t command, uint8_t position, int3
     }
 }
 
-static void app_ems_server_get_cb(const app_ems_server_t * p_server, uint8_t * p_position)
+static void app_ems_server_get_cb(const ems_msg_type_t * p_command, int32_t * const p_data)
 {
-    *p_position = ems_board.position;
+    *p_data  = (int32_t)(temperature_get(m_temperature_sensor_saadc_config.channel_num, m_temperature_vin_saadc_config.channel_num) * 1000.0F);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GET cb %d\n", *p_data);
 }
 
 static void app_model_init(void)
@@ -372,6 +373,7 @@ static void pwm_init(void)
 
 static void up_button_callback(void)
 {
+    
     pad_voltage_up(&ems_board);
 }
 

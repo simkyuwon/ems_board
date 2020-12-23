@@ -2,10 +2,9 @@
 #define EMS_RTC_H__
 
 #include "nrf52.h"
-#include "nrf52_bitfields.h"
 #include "nrf_nvic.h"
 
-#include <stdbool.h>
+#include "ems_board.h"
 
 #define RTC2_CLOCK_FREQ           (32768UL) //32.768KHz
 #define RTC2_CLOCK_PRESCALER      (33UL)    //fRTC = 32768 / (prescaler + 1) = 992.9Hz
@@ -15,10 +14,6 @@
 
 #define RTC2_CLOCK_TO_MS(counter) (uint32_t)((uint64_t)(counter) * RTC2_CLOCK_PRESCALER * 1000ULL / RTC2_CLOCK_FREQ)
 #define RTC2_MS_TO_CLOCK(ms)      ((ms) * RTC2_CLOCK_FREQ / RTC2_CLOCK_PRESCALER / 1000UL)
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 typedef void (* rtc_cb)(void *);
 typedef bool (* check_func)(void);

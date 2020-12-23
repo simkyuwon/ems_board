@@ -25,9 +25,9 @@ typedef struct{
 
 typedef struct __app_ems_server_t app_ems_server_t;
 
-typedef void (*app_ems_set_cb_t)(ems_msg_type_t commamd, uint8_t position, int32_t data);
+typedef void (*app_ems_set_cb_t)(ems_msg_type_t commamd, uint8_t position, int32_t data, uint8_t * const p_board_position);
 
-typedef void (*app_ems_get_cb_t)(const app_ems_server_t * p_app, uint8_t * p_position);
+typedef void (*app_ems_get_cb_t)(const ems_msg_type_t * p_command, int32_t * const p_data);
 
 struct __app_ems_server_t{
     ems_server_t            server;

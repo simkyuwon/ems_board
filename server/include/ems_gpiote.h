@@ -2,7 +2,6 @@
 #define EMS_GPIOTE_H__
 
 #include "nrf_drv_gpiote.h"
-#include "nrf_drv_ppi.h"
 #include "ems_gpio.h"
 #include "ems_board.h"
 

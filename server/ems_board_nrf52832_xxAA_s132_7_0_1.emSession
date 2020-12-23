@@ -1,7 +1,9 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+ </Breakpoints>
  <ExecutionProfileWindow/>
  <FrameBufferWindow>
   <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
@@ -23,9 +25,10 @@
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Access"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Application"/>
+  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;GATT"/>
+  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Health Model"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Mesh stack"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Model"/>
-  <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;nRF5 SDK"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Other"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;Provisioning"/>
   <ProjectSessionItem path="ems_board_nrf52832;ems_board_nrf52832;SEGGER RTT"/>
@@ -63,9 +66,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="53" y="526" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="34" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="65" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/ems_pwm.h" selected="0" top="43" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="25" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_messages.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="203" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="0" top="222" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_server.c" selected="1" top="57" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="59" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/ems_messages.h" selected="0" top="27" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="ReleaseWithDebugInformation" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

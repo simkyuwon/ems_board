@@ -2,6 +2,8 @@
 #define EMS_SERVER_H__
 
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include "access.h"
 #include "ems_common.h"
 #include "ems_messages.h"
@@ -17,7 +19,8 @@ typedef void (*ems_state_set_cb_t)(const ems_server_t * p_self,
 
 typedef void (*ems_state_get_cb_t)(const ems_server_t * p_self,
                                    const access_message_rx_meta_t * p_meta,
-                                   ems_status_params_t * p_out);
+                                   const ems_get_params_t * pin,
+                                   ems_response_params_t * p_out);
 
 typedef struct
 {
@@ -32,16 +35,16 @@ typedef struct
 
 typedef struct
 {
-    bool force_segmented;
-    nrf_mesh_transmic_size_t transmic_size;
-    const ems_server_callbacks_t * p_callbacks;
+    bool                            force_segmented;
+    nrf_mesh_transmic_size_t        transmic_size;
+    const ems_server_callbacks_t *  p_callbacks;
 }ems_server_settings_t;
 
 struct __ems_server_t
 {
-    access_model_handle_t model_handle;
-    tid_tracker_t tid_tracker;
-    ems_server_settings_t settings;
+    access_model_handle_t     model_handle;
+    tid_tracker_t             tid_tracker;
+    ems_server_settings_t     settings;
 };
 
 uint32_t ems_server_init(ems_server_t * p_server, uint8_t element_index);

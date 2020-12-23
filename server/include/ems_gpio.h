@@ -1,7 +1,6 @@
 #ifndef EMS_GPIO_H__
 #define EMS_GPIO_H__
 
-#include "nrf_drv_timer.h"
 #include "ems_gpiote.h"
 #include "ems_board.h"
 #include "ems_rtc.h"
