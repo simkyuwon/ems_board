@@ -393,7 +393,7 @@ static bool mode_button_check(void)
 
 static void mode_button_callback(void)
 {    
-    if(rtc2_delay(2000, mode_button_check))
+    if(rtc2_delay(2000, mode_button_check)) 
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "PUSH 2sec\n");
         board_turn_off();
@@ -401,7 +401,7 @@ static void mode_button_callback(void)
     else
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "PUSH\n");
-        uint32_t sequence_size = ARRAY_SIZE(m_pwm_sequence_config);
+        uint32_t sequence_size  = ARRAY_SIZE(m_pwm_sequence_config);
         uint32_t sequence_index = (m_voltage_pwm_config.p_seq - m_pwm_sequence_config + 1) % sequence_size; //calculate next mode index
         pad_voltage_sequence_mode_set(&m_voltage_pwm_config, &m_pwm_sequence_config[sequence_index]);
     }
@@ -424,8 +424,8 @@ static void gpio_init(void)
     gpio_pin_init(&white_led_gpio_config);
     gpio_pin_init(&blue_led_gpio_config);
 
-    led_state_set(&m_white_led_config, LED_OFF);
-    led_state_set(&m_blue_led_config, LED_OFF);
+    led_state_set(&m_white_led_config,  LED_OFF);
+    led_state_set(&m_blue_led_config,   LED_OFF);
 
     gpio_config_t power_control = BOARD_POWER_GPIO_CONFIG(POWER_CONTROL_PIN);
     gpio_pin_init(&power_control);
@@ -457,13 +457,13 @@ static void start(void)
         static const uint8_t static_auth_data[NRF_MESH_KEY_SIZE] = STATIC_AUTH_DATA;
         mesh_provisionee_start_params_t prov_start_params =
         {
-            .p_static_data    = static_auth_data,
-            .prov_sd_ble_opt_set_cb = NULL,
-            .prov_complete_cb = provisioning_complete_cb,
-            .prov_device_identification_start_cb = device_identification_start_cb,
-            .prov_device_identification_stop_cb = NULL,
-            .prov_abort_cb = provisioning_aborted_cb,
-            .p_device_uri = EX_URI_LS_SERVER
+            .p_static_data                        = static_auth_data,
+            .prov_sd_ble_opt_set_cb               = NULL,
+            .prov_complete_cb                     = provisioning_complete_cb,
+            .prov_device_identification_start_cb  = device_identification_start_cb,
+            .prov_device_identification_stop_cb   = NULL,
+            .prov_abort_cb                        = provisioning_aborted_cb,
+            .p_device_uri                         = EX_URI_LS_SERVER
         };
         ERROR_CHECK(mesh_provisionee_prov_start(&prov_start_params));
     }
@@ -501,12 +501,12 @@ int main(void)
     return 0;
 }
 
-void PWM1_IRQHandler(void)//voltage pwm interrupt
+void PWM1_IRQHandler(void)            //voltage pwm interrupt
 {
-    if(NRF_PWM1->EVENTS_PWMPERIODEND)//pad voltgae control
+    if(NRF_PWM1->EVENTS_PWMPERIODEND) //pad voltgae control
     {
         m_voltage_pwm_config.counter->TASKS_CAPTURE[0] = true;
-        if(m_voltage_pwm_config.counter->CC[0] % PAD_VOLTAGE_CONTROL_TERM == 0)//pid control
+        if(m_voltage_pwm_config.counter->CC[0] % PAD_VOLTAGE_CONTROL_TERM == 0) //pid control
         {
             static double prev_voltage = 3.3F;
             double prev_comp = (double)(m_voltage_pwm_config.dma & PWM_COMPARE_Msk);
@@ -562,7 +562,7 @@ void PWM1_IRQHandler(void)//voltage pwm interrupt
     }
 }
 
-void PWM2_IRQHandler(void)//peltier pwm interrupt
+void PWM2_IRQHandler(void)            //peltier pwm interrupt
 {
     if(NRF_PWM2->EVENTS_SEQEND[0])
     {

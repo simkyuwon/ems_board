@@ -451,7 +451,7 @@ bool pwm_start(const uint32_t pwm_number)
         p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);
 
         p_nrf_pwm->EVENTS_STOPPED = false;
-        p_nrf_pwm->TASKS_STOP     = 1;
+        p_nrf_pwm->TASKS_STOP     = true;
         while(!p_nrf_pwm->EVENTS_STOPPED);
     }
 
@@ -473,13 +473,19 @@ bool pwm_stop(const uint32_t pwm_number)
         return false;
     }
 
+
     nrf_drv_ppi_channel_disable(pwm_ppi_channel[pwm_number]);
 
     p_nrf_pwm->EVENTS_STOPPED = false;
     p_nrf_pwm->TASKS_STOP     = true;
-    pwm_state[pwm_number]     = OFF;
 
     while(!p_nrf_pwm->EVENTS_STOPPED);
+
+    if(pwm_state[pwm_number] == SINGLE_SHOT)
+    {
+        p_nrf_pwm->LOOP = (1 << PWM_LOOP_CNT_Pos);
+    }
+    pwm_state[pwm_number]     = OFF;
 
     return true;
 }

@@ -39,7 +39,6 @@ static void ems_state_set_cb(const ems_server_t * p_self,
 
 void app_ems_status_publish(app_ems_server_t * p_app)
 {
-
     ems_status_params_t status;
 
     (void) ems_server_status_publish(&p_app->server, &status);

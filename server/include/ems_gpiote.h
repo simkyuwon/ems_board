@@ -7,17 +7,17 @@
 
 #define BUTTON_GPIOTE_CONFIG(pin_in, polarity_in)  \
     {                                              \
-        .mode = GPIOTE_CONFIG_MODE_Event,          \
-        .psel = pin_in,                            \
+        .mode     = GPIOTE_CONFIG_MODE_Event,      \
+        .psel     = pin_in,                        \
         .polarity = polarity_in                    \
     }
 
 #define PULSE_GPIOTE_CONFIG(pin_in, polarity_in, outinit_in)  \
     {                                                         \
-        .mode = GPIOTE_CONFIG_MODE_Task,                      \
-        .psel = pin_in,                                       \
+        .mode     = GPIOTE_CONFIG_MODE_Task,                  \
+        .psel     = pin_in,                                   \
         .polarity = polarity_in,                              \
-        .outinit = outinit_in                                 \
+        .outinit  = outinit_in                                \
     }
 
 typedef struct

@@ -19,7 +19,7 @@ const double pt100_resistance_table[] = {
 157.33
 };
 
-static int32_t saadc_channel_count = 0;
+static int32_t  saadc_channel_count = 0;
 static uint16_t saadc_result[SAMPLES_IN_BUFFER * SAADC_CHANNEL_MAX_COUNT];
 static uint32_t saadc_result_sum[SAADC_CHANNEL_MAX_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
 

@@ -11,10 +11,10 @@
     APP_TIMER_DEF(_name ## _timer);                                                   \
     static app_ems_server_t _name =                                                   \
     {                                                                                 \
-        .server.settings.force_segmented = _force_segmented,                          \
-        .server.settings.transmic_size = _mic_size,                                   \
-        .ems_set_cb = _set_cb,                                                        \
-        .ems_get_cb = _get_cb                                                         \
+        .server.settings.force_segmented  = _force_segmented,                         \
+        .server.settings.transmic_size    = _mic_size,                                \
+        .ems_set_cb                       = _set_cb,                                  \
+        .ems_get_cb                       = _get_cb                                   \
     };
 
 typedef struct{

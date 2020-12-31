@@ -39,7 +39,7 @@ bool dip_switch_gpio_init(uint32_t pin_number)
 
 void read_dip_switch(uint32_t * const pin_input)
 {
-    *pin_input = ~(((NRF_P0->IN >> (DIP_SWITCH_0 - 0)) & 0x1) |       //save dip switch state from LSB
+    *pin_input = ~(((NRF_P0->IN >> (DIP_SWITCH_0 - 0)) & 0x1) |       //[0][0][0][0][0][dip2][dip1][dip0]LSB
                    ((NRF_P0->IN >> (DIP_SWITCH_1 - 1)) & 0x2) |
                    ((NRF_P0->IN >> (DIP_SWITCH_2 - 2)) & 0x4)) & 0x7;
 }

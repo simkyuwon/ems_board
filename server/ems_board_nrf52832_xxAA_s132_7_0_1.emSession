@@ -66,9 +66,16 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="203" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="0" top="222" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_server.c" selected="1" top="57" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="59" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/ems_messages.h" selected="0" top="27" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="473" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="src/main.c" selected="1" top="470" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="70" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_server.c" selected="0" top="99" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/app_ems_board.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="24" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_messages.h" selected="0" top="12" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="38" y="171" useTextEdit="1" openedFrom="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/src/main.c" useBinaryEdit="0" left="0" path="include/ems_saadc.c" selected="0" top="125" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="86" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_gpio.c" selected="0" top="57" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_gpiote.c" selected="0" top="30" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="461" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_pwm.c" selected="0" top="444" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_board.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="28" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="include/ems_board.h" selected="0" top="6" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3199"/>
+ <ARMCrossStudioWindow activeProject="ems_board_nrf52832" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="ReleaseWithDebugInformation" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/INFO/workspace/nordic/nrf5_SDK_for_Mesh_v4.2.0_src/examples/light_switch/server/include" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
