@@ -71,7 +71,7 @@ static void handle_set(access_model_handle_t model_handle, const access_message_
     {
         ems_set_msg_pkt_t * p_msg_params_packed = (ems_set_msg_pkt_t *) p_rx_msg->p_data;
 
-        in_data.tid           = p_msg_params_packed->tid;
+        in_data.tid           = p_msg_params_packed->tid;           //message parsing
         in_data.message_type  = p_msg_params_packed->message_type;
 
         if(p_rx_msg->length == EMS_SET_COMMAND_MESSAGE_LEN)
@@ -104,7 +104,7 @@ static void handle_get(access_model_handle_t model_handle, const access_message_
     {
         ems_get_msg_pkt_t * p_msg_params_packed = (ems_get_msg_pkt_t *) p_rx_msg->p_data;
 
-        in_data.tid           = p_msg_params_packed->tid;
+        in_data.tid           = p_msg_params_packed->tid;           //message parsing
         in_data.message_type  = p_msg_params_packed->message_type;
 
         if(model_tid_validate(&p_server->tid_tracker, &p_rx_msg->meta_data, EMS_OPCODE_GET, in_data.tid))
@@ -115,7 +115,7 @@ static void handle_get(access_model_handle_t model_handle, const access_message_
     }
 }
 
-static const access_opcode_handler_t m_opcode_handlers[] = {
+static const access_opcode_handler_t m_opcode_handlers[] = {  //opcode handler setting
     {ACCESS_OPCODE_SIG(EMS_OPCODE_GET), handle_get},
     {ACCESS_OPCODE_SIG(EMS_OPCODE_SET), handle_set},
     {ACCESS_OPCODE_SIG(EMS_OPCODE_SET_UNACKNOWLEDGED), handle_set},

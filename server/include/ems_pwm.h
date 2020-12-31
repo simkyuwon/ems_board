@@ -79,9 +79,9 @@ typedef enum
 
 typedef enum
 {
-    OFF = 0U,
-    ON,
-    SINGLE_SHOT,
+    PWM_OFF = 0U,
+    PWM_ON,
+    PWM_SINGLE_SHOT,
 }pwm_state_t;
 
 typedef struct

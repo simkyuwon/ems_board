@@ -109,7 +109,7 @@ bool temperature_saadc_init(uint32_t * p_sensor_saadc_ch_number,
     return true;
 }
 
-static int search_res_table_index(const int min_index, const int max_index, const double resistance)
+static int search_res_table_index(const int min_index, const int max_index, const double resistance) //binary search
 {
     if(min_index >= max_index)
     {
@@ -138,7 +138,7 @@ double pt100_res2them(const double resistance)
             + (resistance - pt100_resistance_table[table_index]) / (pt100_resistance_table[table_index + 1] - pt100_resistance_table[table_index]); //decimal
 }
 
-void saadc_buffer_update(void)
+static void saadc_buffer_update(void)
 {
     NRF_SAADC->TASKS_START = true;
     while(!NRF_SAADC->EVENTS_STARTED);

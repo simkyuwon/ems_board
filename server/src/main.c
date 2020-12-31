@@ -35,9 +35,6 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <string.h>
-
 /* HAL */
 #include "app_timer.h"
 
@@ -236,7 +233,7 @@ static void app_ems_server_set_cb(const ems_msg_type_t command, uint8_t position
                     ems_board.peltier_target_temperature = (double)data / 1000.0F;
                     break;
                 case CMD_PELTIER_TIMER_SET:
-                     if(pwm_state_get(PELTIER_PWM_NUMBER) == ON)
+                     if(pwm_state_get(PELTIER_PWM_NUMBER) == PWM_ON)
                      {
                         rtc2_interrupt((uint32_t)data, (void *)peltier_stop, NULL);
                      }
@@ -377,7 +374,6 @@ static void pwm_init(void)
 
 static void up_button_callback(void)
 {
-    
     pad_voltage_up(&ems_board);
 }
 
@@ -395,14 +391,11 @@ static void mode_button_callback(void)
 {    
     if(rtc2_delay(2000, mode_button_check)) 
     {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "PUSH 2sec\n");
         board_turn_off();
     }
     else
     {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "PUSH\n");
-        uint32_t sequence_size  = ARRAY_SIZE(m_pwm_sequence_config);
-        uint32_t sequence_index = (m_voltage_pwm_config.p_seq - m_pwm_sequence_config + 1) % sequence_size; //calculate next mode index
+        uint32_t sequence_index = (m_voltage_pwm_config.p_seq - m_pwm_sequence_config + 1) % ARRAY_SIZE(m_pwm_sequence_config); //calculate next mode index
         pad_voltage_sequence_mode_set(&m_voltage_pwm_config, &m_pwm_sequence_config[sequence_index]);
     }
 }
@@ -447,7 +440,7 @@ static void initialize(void)
 
     ems_board.control_mode                = BLE_CONTROL;
     ems_board.pad_target_voltage          = 10.0F;
-    ems_board.peltier_target_temperature  = 25.0F;
+    ems_board.peltier_target_temperature  = 25.0F;        //not used
 }
 
 static void start(void)
